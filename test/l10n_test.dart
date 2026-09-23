@@ -133,6 +133,13 @@ void main() {
     expect(fa.aboutListTileTitle('Tel'), 'About Tel');
   });
 
+  test('delegate متن‌های Cupertino همهٔ زبان‌ها را پشتیبانی می‌کند', () {
+    const AppCupertinoLocalizationsDelegate cupertino = AppCupertinoLocalizationsDelegate();
+    expect(cupertino.isSupported(const Locale('fa')), isTrue);
+    expect(cupertino.isSupported(const Locale('en')), isTrue);
+    expect(cupertino.shouldReload(cupertino), isFalse);
+  });
+
   test('delegate متن‌های Material همهٔ زبان‌ها را پشتیبانی می‌کند', () {
     const AppMaterialLocalizationsDelegate delegate = AppMaterialLocalizationsDelegate();
     // بدون این delegate، زبان فارسی باعث خطای «No MaterialLocalizations found»

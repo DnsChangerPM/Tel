@@ -29,7 +29,7 @@
 | --- | --- | --- |
 | `prepare` | ubuntu | خواندن و اعتبارسنجی نسخه، ساخت تگ و عنوان |
 | `android` | ubuntu | Flutter 3.47.5 → `flutter build apk --release` → `Tel-<نسخه>-android.apk` |
-| `windows` | windows-latest | Flutter 3.19.6 → `flutter build windows --release` → exe + zip (+ setup با Inno Setup) |
+| `windows` | **windows-2022** | Flutter 3.19.6 → `flutter build windows --release` → exe + zip (+ setup با Inno Setup) |
 | `release` | ubuntu | دانلود خروجی‌ها و ساخت انتشار گیت‌هاب با `softprops/action-gh-release` |
 
 در هر دو جاب ساخت (اندروید و ویندوز)، پیش از ساخت این‌ها اجرا می‌شود:
@@ -127,6 +127,8 @@ Tel-<نسخه>-setup-x64.exe              ← فایل نصب ویندوز (اگ
 | خطای `flutter analyze` | چون `--no-fatal-infos` فعال است، فقط **خطاهای واقعی** ساخت را متوقف می‌کنند. متن خطا را بخوانید (فایل و شمارهٔ خط داده می‌شود). |
 | خطای Gradle دربارهٔ AGP/Gradle | جاب اندروید باید با Flutter 3.47.x اجرا شود (AGP 9.1.0 + Gradle 9.3.1). نسخهٔ ویندوزی 3.19.6 برای پروژهٔ اندروید استفاده نمی‌شود. |
 | دانلود نشدن SDK/NDK | مرحلهٔ «آماده‌سازی اجزای Android SDK» این کار را با `sdkmanager` انجام می‌دهد؛ اگر شکست بخورد AGP خودش دانلود می‌کند. |
-| «فایل tel.exe ساخته نشد» در جاب ویندوز | مطمئن شوید جاب ویندوز روی `windows-latest` و با Flutter 3.19.6 اجرا می‌شود و Visual Studio 2022 (بارکاری Desktop development with C++) روی رانر موجود است. |
+| «فایل tel.exe ساخته نشد» در جاب ویندوز | جاب ویندوز باید روی `windows-2022` اجرا شود؛ این تصویر Visual Studio 2022 (بارکاری Desktop development with C++) دارد. |
+| خطای `CMake Error: Generator ... could not find any instance of Visual Studio` | تصویر `windows-latest` (از سال ۲۰۲۶) فقط **Visual Studio 2026 (نسخهٔ ۱۸)** دارد و Flutter 3.19.6 فقط تا VS 2022 (نسخهٔ ۱۷) را می‌شناسد، پس گزینهٔ `-G "Visual Studio 16 2019"` را می‌فرستد و CMake شکست می‌خورد. راه‌حل: `runs-on: windows-2022` (همین کاری که ورک‌فلو می‌کند). اگر روزی تصویر ۲۰۲۲ بازنشسته شد، Flutter را به 3.22+ ارتقا دهید (پشتیبانی ویندوز ۸.۱ از دست می‌رود) یا روی رانر جدید VS 2022 را نصب کنید. |
 | Published release نشد | ورودی `create_release` باید `true` باشد و در Settings → Actions → General دسترسی `Read and write permissions` برای Workflow فعال باشد. |
+| برنامهٔ ویندوز روی سیستم تازه‌نصب اجرا نمی‌شود | کتابخانهٔ زمان اجرای ++C به‌صورت استاتیک در `windows/CMakeLists.txt` پیوند خورده (`CMAKE_MSVC_RUNTIME_LIBRARY`) تا به `Visual C++ Redistributable` نیازی نباشد؛ همچنین فایل zip کامل (exe + dll + پوشهٔ data) را استفاده کنید. |
 | APK نصب نمی‌شود | اگر نسخه‌ای قبلاً با کلید دیگری نصب شده، ابتدا آن را حذف کنید (امضای متفاوت = نصب‌نشدن). |

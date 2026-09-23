@@ -42,6 +42,7 @@ class TelApp extends StatelessWidget {
             supportedLocales: const <Locale>[Locale('fa'), Locale('en')],
             localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
               AppMaterialLocalizationsDelegate(),
+              AppCupertinoLocalizationsDelegate(),
             ],
             builder: (BuildContext context, Widget? inner) {
               return Directionality(

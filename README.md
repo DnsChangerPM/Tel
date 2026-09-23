@@ -173,6 +173,7 @@ lib/
     settings_store.dart         ذخیرهٔ تنظیمات کوچک (%APPDATA%\Tel\settings.json)
   state/editor_state.dart       وضعیت مرکزی (ChangeNotifier + AppScope)
   i18n/l10n.dart                متن‌های فارسی و انگلیسی
+  i18n/localizations.dart       متن‌های آمادهٔ ویجت‌های Material برای فارسی
   ui/                           theme, widgets, home_screen و چهار پنل (تب)
 android/                        پروژهٔ اندروید (Gradle Kotlin DSL, AGP 9.1.0, minSdk 24)
 windows/                        پروژهٔ ویندوز (CMake + رانر C++, مانیفست ویندوز ۸.۱ تا ۱۱)

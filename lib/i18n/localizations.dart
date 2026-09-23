@@ -13,6 +13,7 @@
 // و برای بقیهٔ زبان‌ها متن‌های پیش‌فرض انگلیسی. بنابراین برنامه همچنان هیچ
 // وابستگی بیرونی (پکیج pub.dev) ندارد و کاملاً آفلاین ساخته می‌شود.
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -78,6 +79,25 @@ class PersianMaterialLocalizations extends DefaultMaterialLocalizations {
   String get previousPageTooltip => 'صفحهٔ قبل';
   @override
   String get rowsPerPageTitle => 'تعداد ردیف در صفحه';
+}
+
+/// متن‌های پیش‌فرض Cupertino برای همهٔ زبان‌ها
+///
+/// `CupertinoLocalizations` هم فقط زبان انگلیسی را پشتیبانی می‌کند؛ نبودِ delegate
+/// برای فارسی باعث هشدار (و در تست‌ها خطای) «locale is not supported by all of its
+/// localization delegates» می‌شود. متن‌های Cupertino در Tel استفاده نمی‌شوند، ولی
+/// باید delegate آن وجود داشته باشد تا پنجرهٔ «تحلیل»/ابزارها و تست‌ها سالم بمانند.
+class AppCupertinoLocalizationsDelegate extends LocalizationsDelegate<CupertinoLocalizations> {
+  const AppCupertinoLocalizationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) => DefaultCupertinoLocalizations.load(locale);
+
+  @override
+  bool shouldReload(covariant LocalizationsDelegate<CupertinoLocalizations> old) => false;
 }
 
 /// delegate متن‌های Material برای همهٔ زبان‌ها
