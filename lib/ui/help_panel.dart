@@ -36,7 +36,7 @@ class HelpPanel extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(l10n.language, style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant)),
+                Text(l10n.languageLabel, style: TextStyle(fontSize: 12.5, color: scheme.onSurfaceVariant)),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 8,

@@ -212,7 +212,8 @@ class TelegramStringsParser {
   const TelegramStringsParser();
 
   static final RegExp _stringTag = RegExp(
-    r'<string\b([^<>]*?)(?:\/>|>([\s\S]*?)<\/string\s*>)',
+    // گروه ۱: ویژگی‌ها، گروه ۲: متن داخل تگ، گروه ۳: تگ بسته (برای تگ خودبسته null)
+    r'<string\b([^<>]*?)(?:\/>|>([\s\S]*?)(<\/string\s*>))',
     multiLine: true,
   );
 
@@ -253,13 +254,16 @@ class TelegramStringsParser {
       final RegExpMatch m = matches[i];
       final String attrs = (m.group(1) ?? '').trim();
       final String? inner = m.group(2);
+      final String? closeTag = m.group(3);
 
       final RegExpMatch? t = _translatable.firstMatch(attrs);
       final bool translatable = t == null || t.group(1)!.toLowerCase() != 'false';
 
-      final bool selfClosing = inner == null;
-      final int valueStart = selfClosing ? m.end : (m.end(2) - inner.length);
-      final int valueEnd = selfClosing ? m.end : m.end(2);
+      // آفست‌های دقیق متن داخل تگ: از انتهای تطبیق، به اندازهٔ تگ بسته و متن
+      // داخل تگ عقب می‌رویم (Match در Dart آفست گروه‌ها را نمی‌دهد).
+      final bool selfClosing = closeTag == null;
+      final int valueEnd = selfClosing ? m.end : m.end - closeTag.length;
+      final int valueStart = selfClosing ? m.end : valueEnd - (inner?.length ?? 0);
 
       // مقدار از متن اصلی (بدون ماسک) خوانده می‌شود
       final String rawValue = selfClosing
@@ -338,7 +342,7 @@ List<String> extractPlaceholders(String text) {
 /// می‌شود و دوباره رمزگشایی نمی‌شود.
 String unescapeXmlValue(String raw) {
   final RegExp entity = RegExp(r'&(amp|lt|gt|quot|apos|nbsp|rlm|lrm|#\d+|#x[0-9A-Fa-f]+);');
-  return raw.replaceAllMapped(entity, (RegExpMatch m) {
+  return raw.replaceAllMapped(entity, (Match m) {
     final String token = m.group(1)!;
     switch (token) {
       case 'amp':

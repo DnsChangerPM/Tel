@@ -43,7 +43,6 @@ class _EditorPanelState extends State<EditorPanel> {
   bool _regex = false;
   bool _caseSensitive = false;
   String? _regexError;
-  int _lastMatchIndex = -1;
   int _cursorLine = 1;
   int _cursorColumn = 1;
 
@@ -116,6 +115,58 @@ class _EditorPanelState extends State<EditorPanel> {
     }
   }
 
+  /// گسترش متن جایگزینی با ارجاع به گروه‌ها: `$1`، `$2`، `${2}` و `$name`
+  String _expandReplacement(RegExpMatch match, String template) {
+    final StringBuffer out = StringBuffer();
+    int i = 0;
+    while (i < template.length) {
+      final String ch = template[i];
+      if (ch != r'$' || i + 1 >= template.length) {
+        out.write(ch);
+        i++;
+        continue;
+      }
+      final String next = template[i + 1];
+      if (next == r'$') {
+        out.write(r'$');
+        i += 2;
+        continue;
+      }
+      if (next == '{') {
+        final int close = template.indexOf('}', i + 2);
+        if (close < 0) {
+          out.write(ch);
+          i++;
+          continue;
+        }
+        final String token = template.substring(i + 2, close);
+        final int? index = int.tryParse(token);
+        out.write(index == null ? (match.namedGroup(token) ?? '') : _groupOf(match, index));
+        i = close + 1;
+        continue;
+      }
+      final int? index = int.tryParse(next);
+      if (index != null) {
+        out.write(_groupOf(match, index));
+        i += 2;
+        continue;
+      }
+      final RegExpMatch? named = RegExp('[A-Za-z_][A-Za-z0-9_]*').matchAsPrefix(template, i + 1);
+      if (named == null) {
+        out.write(ch);
+        i++;
+        continue;
+      }
+      out.write(match.namedGroup(named.group(0)!) ?? '');
+      i = named.end;
+    }
+    return out.toString();
+  }
+
+  /// گروه شمارهٔ [index] از تطبیق (اگر وجود نداشته باشد، رشتهٔ خالی)
+  static String _groupOf(RegExpMatch match, int index) =>
+      index >= 0 && index <= match.groupCount ? (match.group(index) ?? '') : '';
+
   int _matchCount() {
     final RegExp? pattern = _buildPattern();
     if (pattern == null) return 0;
@@ -127,7 +178,6 @@ class _EditorPanelState extends State<EditorPanel> {
     if (pattern == null) return;
     final Iterable<RegExpMatch> matches = pattern.allMatches(_controller.text);
     if (matches.isEmpty) {
-      setState(() => _lastMatchIndex = -1);
       return;
     }
     final int start = _controller.selection.baseOffset;
@@ -144,7 +194,6 @@ class _EditorPanelState extends State<EditorPanel> {
 
   void _selectRange(int start, int end) {
     _controller.selection = TextSelection(baseOffset: start, extentOffset: end);
-    setState(() => _lastMatchIndex = start);
     // اسکرول تقریبی به محل تطابق
     final double line = _cursorLineOf(start);
     final double total = (_controller.text.split('\n').length).clamp(1, 1 << 30).toDouble();
@@ -167,7 +216,10 @@ class _EditorPanelState extends State<EditorPanel> {
       return;
     }
     final String replacement = _regex
-        ? selected.replaceFirstMapped(pattern, _replaceController.text)
+        ? selected.replaceFirstMapped(
+            pattern,
+            (Match m) => _expandReplacement(m as RegExpMatch, _replaceController.text),
+          )
         : _replaceController.text;
     final String updated = _controller.text.replaceRange(selection.start, selection.end, replacement);
     _controller.value = TextEditingValue(
@@ -183,7 +235,10 @@ class _EditorPanelState extends State<EditorPanel> {
     if (pattern == null) return;
     final String source = _controller.text;
     final String updated = _regex
-        ? source.replaceAllMapped(pattern, (Match m) => _replaceController.text)
+        ? source.replaceAllMapped(
+            pattern,
+            (Match m) => _expandReplacement(m as RegExpMatch, _replaceController.text),
+          )
         : source.replaceAll(pattern, _replaceController.text);
     final int count = pattern.allMatches(source).length;
     _controller.value = TextEditingValue(text: updated, selection: const TextSelection.collapsed(offset: 0));

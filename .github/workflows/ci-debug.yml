@@ -1,5 +1,6 @@
-# فایل موقت عیب‌یابی: خروجی flutter analyze را با هر دو نسخهٔ Flutter به‌صورت
-# کامنت روی PR می‌فرستد تا از بیرون قابل خواندن باشد. بعد از رفع خطاها حذف می‌شود.
+# فایل موقت عیب‌یابی: خروجی flutter analyze و flutter test را با هر دو نسخهٔ
+# Flutter به‌صورت کامنت روی PR می‌فرستد تا از بیرون قابل خواندن باشد. بعد از
+# رفع خطاها حذف می‌شود.
 
 name: CI debug (temporary)
 
@@ -15,7 +16,7 @@ permissions:
 
 jobs:
   analyze:
-    name: analyze ${{ matrix.flutter }}
+    name: check ${{ matrix.flutter }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,14 +33,21 @@ jobs:
           flutter-version: ${{ matrix.flutter }}
 
       - name: pub get
-        run: flutter pub get
+        run: flutter pub get > "pubget-${{ matrix.flutter }}.txt" 2>&1 || true
 
       - name: analyze
         continue-on-error: true
         run: |
           flutter analyze --no-fatal-infos --no-fatal-warnings > "analyze-${{ matrix.flutter }}.txt" 2>&1 || true
-          echo "===== flutter ${{ matrix.flutter }} ====="
+          echo "===== analyze ${{ matrix.flutter }} ====="
           cat "analyze-${{ matrix.flutter }}.txt"
+
+      - name: test
+        continue-on-error: true
+        run: |
+          flutter test > "test-${{ matrix.flutter }}.txt" 2>&1 || true
+          echo "===== test ${{ matrix.flutter }} ====="
+          tail -80 "test-${{ matrix.flutter }}.txt"
 
       - name: ارسال خروجی به‌صورت کامنت PR
         env:
@@ -49,8 +57,17 @@ jobs:
           python3 - <<'PY'
           import json, os, urllib.request, urllib.error
           flutter = os.environ['FLUTTER_VERSION']
-          text = open('analyze-%s.txt' % flutter, encoding='utf-8').read()
-          body = '### flutter analyze — Flutter %s\n\n```\n%s\n```\n' % (flutter, text[:60000])
+
+          def read(name):
+              try:
+                  return open('%s-%s.txt' % (name, flutter), encoding='utf-8').read()
+              except OSError:
+                  return '(no output)'
+
+          body = (
+              '### Flutter %s\n\n**flutter analyze**\n\n```\n%s\n```\n\n'
+              '**flutter test**\n\n```\n%s\n```\n'
+          ) % (flutter, read('analyze')[:25000], read('test')[:25000])
           request = urllib.request.Request(
               'https://api.github.com/repos/DnsChangerPM/Tel/issues/1/comments',
               data=json.dumps({'body': body}).encode('utf-8'),

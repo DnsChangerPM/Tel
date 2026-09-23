@@ -67,7 +67,7 @@ const List<String> allKeys = <String>[
   'loadEnglishReference',
   'englishReferenceLoaded',
   'englishReferenceHint',
-  'language',
+  'languageLabel',
   'theme',
   'themeLight',
   'themeDark',

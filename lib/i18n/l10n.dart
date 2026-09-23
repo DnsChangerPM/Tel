@@ -168,7 +168,7 @@ class L10n {
   String get englishReferenceHint => _t('englishReferenceHint');
 
   // --- تنظیمات و درباره ---
-  String get language => _t('language');
+  String get languageLabel => _t('languageLabel');
 
   String get theme => _t('theme');
 
@@ -279,7 +279,7 @@ class L10n {
       'loadEnglishReference': 'بارگذاری فایل انگلیسی (مرجع)',
       'englishReferenceLoaded': 'فایل مرجع انگلیسی بارگذاری شد',
       'englishReferenceHint': 'برای مقایسهٔ قالب‌های %s با متن اصلی انگلیسی',
-      'language': 'زبان',
+      'languageLabel': 'زبان',
       'theme': 'پوسته',
       'themeLight': 'روشن',
       'themeDark': 'تیره',
@@ -319,7 +319,7 @@ class L10n {
 
 نکته‌های مهم:
 • تلگرام کاراکترهای \\n را به‌عنوان خط جدید تفسیر می‌کند؛ آن‌ها را خراب نکنید.
-• قالب‌هایی مثل %1$s و %d باید در متن ترجمه هم باقی بمانند وگرنه برنامه کرش می‌کند.
+• قالب‌هایی مثل %1\$s و %d باید در متن ترجمه هم باقی بمانند وگرنه برنامه کرش می‌کند.
 • برای مقایسهٔ خودکار قالب‌ها، فایل انگلیسی همان بخش را از «بررسی سلامت»
   به‌عنوان مرجع بارگذاری کنید.
 ''',
@@ -387,7 +387,7 @@ class L10n {
       'loadEnglishReference': 'Load English reference',
       'englishReferenceLoaded': 'English reference loaded',
       'englishReferenceHint': 'Compare %s placeholders with the original English text',
-      'language': 'Language',
+      'languageLabel': 'Language',
       'theme': 'Theme',
       'themeLight': 'Light',
       'themeDark': 'Dark',
