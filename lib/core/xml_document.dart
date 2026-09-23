@@ -221,12 +221,6 @@ class TelegramStringsParser {
   static final RegExp _translatable = RegExp('''translatable\\s*=\\s*["']([^"']*)["']''');
 
   List<XmlStringEntry> parse(String source) {
-    final List<XmlStringEntry> entries = <XmlStringEntry>[];
-    final Map<String, int> counters = <String, int>{};
-
-    // کامنت‌های XML پوشانده می‌شوند (با فاصله، هم‌طول با متن اصلی) تا رشته‌های
-    // داخل کامنت‌ها اشتباهاً به‌عنوان متن فعال خوانده نشوند؛ آفست‌ها هم جابه‌جا
-    // نمی‌شوند چون طول متن تغییر نمی‌کند.
     final String masked = _maskComments(source);
 
     // فهرست مکان خط‌های جدید یک‌بار ساخته می‌شود تا شمارهٔ خط هر رشته با
@@ -237,17 +231,28 @@ class TelegramStringsParser {
       if (source.codeUnitAt(i) == 0x0A) newlines.add(i);
     }
 
-    for (final RegExpMatch m in _stringTag.allMatches(masked)) {
+    final List<RegExpMatch> matches = _stringTag.allMatches(masked).toList(growable: false);
+
+    // پاس اول: استخراج نام‌ها و شمردن آن‌ها. هر رشته‌ای که نامش بیش از یک بار
+    // در فایل آمده باشد «تکراری» است؛ یعنی همهٔ ردیف‌های هم‌نام علامت می‌خورند
+    // (نه فقط ردیف‌های بعدی) تا کاربر در فهرست، همهٔ آن‌ها را ببیند.
+    final Map<String, int> counters = <String, int>{};
+    final List<String?> names = <String?>[];
+    for (final RegExpMatch m in matches) {
+      final String attrs = (m.group(1) ?? '').trim();
+      final String? name = _nameOf(attrs);
+      names.add(name);
+      if (name != null) counters[name] = (counters[name] ?? 0) + 1;
+    }
+
+    // پاس دوم: ساخت ردیف‌ها با آفست‌های دقیق در متن اصلی
+    final List<XmlStringEntry> entries = <XmlStringEntry>[];
+    for (int i = 0; i < matches.length; i++) {
+      final String? name = names[i];
+      if (name == null) continue;
+      final RegExpMatch m = matches[i];
       final String attrs = (m.group(1) ?? '').trim();
       final String? inner = m.group(2);
-
-      final RegExpMatch? nameMatch = _doubleQuotedName.firstMatch(attrs) ?? _singleQuotedName.firstMatch(attrs);
-      if (nameMatch == null) continue;
-      final String name = nameMatch.group(1)!.trim();
-      if (name.isEmpty) continue;
-
-      final int count = (counters[name] ?? 0) + 1;
-      counters[name] = count;
 
       final RegExpMatch? t = _translatable.firstMatch(attrs);
       final bool translatable = t == null || t.group(1)!.toLowerCase() != 'false';
@@ -273,11 +278,20 @@ class TelegramStringsParser {
           valueEnd: valueEnd,
           selfClosing: selfClosing,
           rawAttributes: attrs,
-          isDuplicate: count > 1,
+          isDuplicate: (counters[name] ?? 1) > 1,
         ),
       );
     }
     return entries;
+  }
+
+  /// نام منبع از رشتهٔ ویژگی‌ها؛ اگر نام معتبر نبود `null`
+  static String? _nameOf(String attrs) {
+    final RegExpMatch? nameMatch =
+        _doubleQuotedName.firstMatch(attrs) ?? _singleQuotedName.firstMatch(attrs);
+    if (nameMatch == null) return null;
+    final String name = nameMatch.group(1)!.trim();
+    return name.isEmpty ? null : name;
   }
 
   /// جایگزینی کامنت‌های XML با فاصله (طول متن حفظ می‌شود)
