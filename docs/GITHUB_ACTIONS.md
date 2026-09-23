@@ -32,7 +32,7 @@
 | `windows` | windows-latest | Flutter 3.19.6 → `flutter build windows --release` → exe + zip (+ setup با Inno Setup) |
 | `release` | ubuntu | دانلود خروجی‌ها و ساخت انتشار گیت‌هاب با `softprops/action-gh-release` |
 
-در هر سه جاب، پیش از ساخت این‌ها اجرا می‌شود:
+در هر دو جاب ساخت (اندروید و ویندوز)، پیش از ساخت این‌ها اجرا می‌شود:
 
 ```bash
 python3 tools/set_version.py "<نسخه>"     # نوشتن نسخه در pubspec.yaml
@@ -65,7 +65,8 @@ TEL_APP_VERSION, TEL_BUILD_NUMBER, TEL_BUILD_TIME, TEL_BUILD_CHANNEL, TEL_REPO
 * در `pubspec.yaml` محدودهٔ `sdk: ">=3.3.0 <4.0.0"` و `flutter: ">=3.19.0"` است.
 * در کد از API های جدیدتر از Flutter 3.19 استفاده نشده است
   (مثلاً `Color.withValues` یا `ColorScheme.surfaceContainerHighest`).
-* در `analysis_options.yaml` هشدارهای منسوخ‌شدن نادیده گرفته شده‌اند.
+* در `analysis_options.yaml` هیچ لینت سختگیرانه‌ای که با Flutter 3.19 ناسازگار باشد
+  فعال نشده و پروژه هیچ وابستگی بیرونی (pub.dev) ندارد.
 
 اگر فقط نسخهٔ جدید را هدف بگیرید می‌توانید نسخهٔ ویندوز را در
 `env.FLUTTER_VERSION_WINDOWS` به `3.47.5` تغییر دهید — ولی آن‌وقت خروجی روی

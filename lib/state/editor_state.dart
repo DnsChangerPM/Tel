@@ -162,7 +162,6 @@ class EditorState extends ChangeNotifier {
     filePath = path;
     isSampleFile = sample;
     report = null;
-    englishBaselineName = null;
     _setStatus(name == null ? l10n.statusReady : '${l10n.statusLoaded}: $name');
     validate();
     notifyListeners();
@@ -188,6 +187,8 @@ class EditorState extends ChangeNotifier {
     filePath = null;
     report = null;
     isSampleFile = false;
+    englishBaseline = <String, String>{};
+    englishBaselineName = null;
     _setStatus(l10n.statusNoFile);
     notifyListeners();
   }
