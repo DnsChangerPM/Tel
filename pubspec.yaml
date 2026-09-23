@@ -1,0 +1,41 @@
+name: tel
+description: "Tel — ویرایشگر متن تلگرام: ویرایش فایل‌های XML ترجمهٔ تلگرام (tg_inline_strings.xml) روی اندروید و ویندوز"
+publish_to: "none"
+
+# نسخه در ورک‌فلوی گیت‌هاب با --build-name و --build-number روی همین مقدارها
+# بازنویسی می‌شود؛ پس همان نسخه‌ای که هنگام اجرای ورک‌فلو پرسیده می‌شود داخل
+# فایل‌های APK و EXE می‌آید.
+version: 1.0.0+1
+
+environment:
+  # همین محدوده باعث می‌شود کد هم با Flutter جديد (ساخت اندروید، 3.47) و هم با
+  # Flutter 3.19 (آخرین نسخه‌ای که از ویندوز ۸.۱ پشتیبانی می‌کند، ساخت EXE)
+  # کامپایل شود.
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # توجه: برنامه هیچ وابستگی بیرونی (pub.dev) ندارد؛ بنابراین:
+  #   * ساخت در GitHub Actions بدون دانلود پکیج شخص ثالث انجام می‌شود
+  #   * انتخاب فایل روی اندروید با MethodChannel خودمان (MainActivity.kt)
+  #     و روی ویندوز با دیالوگ بومی ویندوز انجام می‌شود
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/samples/
+  fonts:
+    - family: Vazirmatn
+      fonts:
+        - asset: assets/fonts/Vazirmatn-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Vazirmatn-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Vazirmatn-Bold.ttf
+          weight: 700

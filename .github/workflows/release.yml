@@ -1,0 +1,405 @@
+# Tel — ویرایشگر متن تلگرام
+#
+# این ورک‌فلو هنگام اجرا «نسخهٔ برنامه» را می‌پرسد و سپس:
+#   ۱) APK اندروید را می‌سازد        (اندروید ۷.۰ تا آخرین نسخه)
+#   ۲) EXE ویندوز را می‌سازد        (ویندوز ۸.۱ تا ویندوز ۱۱)
+#   ۳) هر دو فایل را در بخش Releases گیت‌هاب منتشر می‌کند.
+#
+# روش اجرا:  تب Actions → Build & Release (APK + EXE) → Run workflow → نسخه را وارد کنید.
+
+name: Build & Release (APK + EXE)
+
+on:
+  # اجرای دستی همراه با پرسیدن نسخه
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'نسخهٔ برنامه (مثال: 1.2.0  یا  1.2.0+7)'
+        required: true
+        default: '1.0.0'
+        type: string
+      build_number:
+        description: 'شمارهٔ بیلد (خالی = شمارهٔ اجرای ورک‌فلو)'
+        required: false
+        default: ''
+        type: string
+      release_title:
+        description: 'عنوان انتشار (خالی = Tel <نسخه>)'
+        required: false
+        default: ''
+        type: string
+      release_notes:
+        description: 'توضیحات انتشار'
+        required: false
+        default: ''
+        type: string
+      create_release:
+        description: 'ساخت انتشار در بخش Releases'
+        required: true
+        default: true
+        type: boolean
+      prerelease:
+        description: 'انتشار به‌عنوان پیش‌نسخه'
+        required: true
+        default: false
+        type: boolean
+
+  # یا با پوش کردن تگ نسخه:  git tag v1.2.0 && git push origin v1.2.0
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_CHANNEL: stable
+  # نسخهٔ فلاتر برای اندروید (minSdk 24 → اندروید ۷.۰ و بالاتر)
+  FLUTTER_VERSION_ANDROID: '3.47.5'
+  # آخرین نسخه‌ای از Flutter که خروجی ویندوزی آن روی ویندوز ۸.۱ هم اجرا می‌شود
+  # (Flutter 3.19 آخرین نسخهٔ پشتیبان ویندوز ۷/۸/۸.۱ است)
+  FLUTTER_VERSION_WINDOWS: '3.19.6'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # ۱) خواندن نسخه از ورودی‌ها (یا از تگ) و آماده‌سازی خروجی‌ها
+  # ---------------------------------------------------------------------------
+  prepare:
+    name: آماده‌سازی نسخه
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+      build_number: ${{ steps.calc.outputs.build_number }}
+      pubspec_version: ${{ steps.calc.outputs.pubspec_version }}
+      tag: ${{ steps.calc.outputs.tag }}
+      title: ${{ steps.calc.outputs.title }}
+    steps:
+      - name: بررسی ورودی‌ها
+        id: calc
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_BUILD: ${{ inputs.build_number }}
+          INPUT_TITLE: ${{ inputs.release_title }}
+          INPUT_NOTES: ${{ inputs.release_notes }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+
+          event = os.environ.get('EVENT_NAME', '')
+          version_input = (os.environ.get('INPUT_VERSION') or '').strip()
+          if not version_input and event == 'push':
+              version_input = os.environ.get('REF_NAME', '').strip().lstrip('v')
+          if not version_input:
+              raise SystemExit('::error::نسخهٔ برنامه مشخص نشده است. مقدار version را وارد کنید.')
+
+          match = re.fullmatch(r'v?(\d+)\.(\d+)\.(\d+)(?:\+(\d+))?', version_input)
+          if not match:
+              raise SystemExit(
+                  f'::error::نسخهٔ نامعتبر: {version_input!r} — قالب درست مثل 1.2.0 یا 1.2.0+7 است')
+
+          name = '.'.join(match.group(1, 2, 3))
+          build = match.group(4) or (os.environ.get('INPUT_BUILD') or '').strip() \
+              or os.environ.get('RUN_NUMBER') or '1'
+          if not build.isdigit():
+              raise SystemExit(f'::error::شمارهٔ بیلد نامعتبر: {build!r}')
+          tag = f'v{name}'
+          title = (os.environ.get('INPUT_TITLE') or '').strip() or f'Tel {name}'
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write(f'version={name}\n')
+              out.write(f'build_number={build}\n')
+              out.write(f'pubspec_version={name}+{build}\n')
+              out.write(f'tag={tag}\n')
+              out.write(f'title={title}\n')
+
+          summary = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary:
+              with open(summary, 'a', encoding='utf-8') as step:
+                  step.write('## Tel\n')
+                  step.write(f'- نسخه: **{name}+{build}**\n')
+                  step.write(f'- تگ انتشار: `{tag}`\n')
+          print(f'نسخه انتخاب شد: {name}+{build}')
+          PY
+
+      - name: خلاصهٔ ورودی‌ها
+        run: |
+          echo "نسخه: ${{ steps.calc.outputs.pubspec_version }}"
+          echo "تگ: ${{ steps.calc.outputs.tag }}"
+
+  # ---------------------------------------------------------------------------
+  # ۲) ساخت APK اندروید (اندروید ۷.۰ تا آخرین نسخه)
+  # ---------------------------------------------------------------------------
+  android:
+    name: ساخت APK اندروید
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب جاوا ۲۱ (لازم برای AGP 9 و Gradle 9)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: نصب Flutter ${{ env.FLUTTER_VERSION_ANDROID }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION_ANDROID }}
+          cache: true
+
+      - name: آماده‌سازی اجزای Android SDK (اختیاری، بدون شکست در صورت نبود)
+        run: |
+          SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1 || true)
+          echo "sdkmanager: ${SDKMANAGER:-پیدا نشد}"
+          if [ -n "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+            "$SDKMANAGER" "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null 2>&1 || true
+            echo "اجزای SDK آماده شد."
+          fi
+
+      - name: ذخیرهٔ حافظهٔ Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: اطلاع از نسخهٔ فلاتر
+        run: flutter --version
+
+      - name: آماده‌سازی کلید امضای APK (اختیاری — فقط با تعریف Secretها)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Secret مربوط به کیستور تعریف نشده؛ APK با کلید دیباگ امضا می‌شود."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/tel-release.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=../tel-release.jks
+          EOF
+          echo "کیستور آماده شد؛ APK با کلید شما امضا می‌شود."
+
+      - name: نوشتن نسخه در pubspec.yaml
+        run: python3 tools/set_version.py "${{ needs.prepare.outputs.pubspec_version }}"
+
+      - name: دریافت وابستگی‌ها
+        run: flutter pub get
+
+      - name: تحلیل کد
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: اجرای تست‌ها
+        run: flutter test
+
+      - name: ساخت APK
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+        run: |
+          flutter build apk --release \
+            --build-name "$VERSION" \
+            --build-number "$BUILD_NUMBER" \
+            --dart-define=TEL_APP_VERSION="$VERSION" \
+            --dart-define=TEL_BUILD_NUMBER="$BUILD_NUMBER" \
+            --dart-define=TEL_BUILD_TIME="$(date -u '+%Y-%m-%d %H:%M UTC')" \
+            --dart-define=TEL_BUILD_CHANNEL="github-actions" \
+            --dart-define=TEL_REPO="${{ github.server_url }}/${{ github.repository }}"
+
+      - name: بررسی خروجی APK
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          ls -lh "$APK"
+          unzip -l "$APK" | grep -E "classes.dex|resources.arsc|lib/arm64-v8a|lib/armeabi-v7a" || true
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 2>/dev/null | tail -1 || true)
+          if [ -n "$AAPT" ]; then
+            echo "--- اطلاعات بسته (minSdk / targetSdk / versionName) ---"
+            "$AAPT" dump badging "$APK" | grep -E "package:|sdkVersion|targetSdkVersion" || true
+          fi
+
+      - name: نام‌گذاری فایل خروجی
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "Tel-${VERSION}-android.apk"
+          ls -lh "Tel-${VERSION}-android.apk"
+
+      - name: بارگذاری خروجی
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: Tel-*-android.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # ۳) ساخت EXE ویندوز (ویندوز ۸.۱ تا ویندوز ۱۱)
+  # ---------------------------------------------------------------------------
+  windows:
+    name: ساخت EXE ویندوز
+    needs: prepare
+    # windows-2022 و نه windows-latest:
+    #   تصویر windows-latest (از سال ۲۰۲۶) فقط Visual Studio 2026 (نسخهٔ ۱۸) را دارد و
+    #   Flutter 3.19.6 (آخرین نسخهٔ سازگار با ویندوز ۸.۱) فقط تا Visual Studio 2022
+    #   (نسخهٔ ۱۷) را می‌شناسد؛ روی آن تصویر خطای
+    #   «Generator ... could not find any instance of Visual Studio» می‌دهد.
+    #   تصویر windows-2022 همان VS 2022 را دارد و ساخت EXE روی آن موفق است.
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب Flutter ${{ env.FLUTTER_VERSION_WINDOWS }} (آخرین نسخه با پشتیبانی ویندوز ۸.۱)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          flutter-version: ${{ env.FLUTTER_VERSION_WINDOWS }}
+          cache: true
+
+      - name: اطلاع از نسخهٔ فلاتر
+        run: flutter --version
+
+      - name: نوشتن نسخه در pubspec.yaml
+        shell: pwsh
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: 'utf-8'
+        run: python tools/set_version.py "${{ needs.prepare.outputs.pubspec_version }}"
+
+      - name: دریافت وابستگی‌ها
+        run: flutter pub get
+
+      - name: تحلیل کد
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: اجرای تست‌ها
+        run: flutter test
+
+      - name: ساخت EXE
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+        run: |
+          flutter build windows --release `
+            --build-name "$env:VERSION" `
+            --build-number "$env:BUILD_NUMBER" `
+            --dart-define=TEL_APP_VERSION="$env:VERSION" `
+            --dart-define=TEL_BUILD_NUMBER="$env:BUILD_NUMBER" `
+            --dart-define=TEL_BUILD_TIME="$((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm UTC'))" `
+            --dart-define=TEL_BUILD_CHANNEL="github-actions" `
+            --dart-define=TEL_REPO="${{ github.server_url }}/${{ github.repository }}"
+
+      - name: بسته‌بندی خروجی ویندوز
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $exe = Get-ChildItem -Path build\windows -Recurse -Filter tel.exe |
+                 Where-Object { $_.FullName -match 'runner\\Release' } | Select-Object -First 1
+          if (-not $exe) { throw 'فایل tel.exe ساخته نشد' }
+          Write-Host "خروجی: $($exe.FullName)"
+          $releaseDir = $exe.DirectoryName
+          Copy-Item $exe.FullName "dist\Tel-$env:VERSION-windows-x64.exe" -Force
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath "dist\Tel-$env:VERSION-windows-x64.zip" -Force
+          Get-ChildItem dist | Select-Object Name, Length
+
+      - name: ساخت فایل نصب (اختیاری — اگر Inno Setup موجود باشد)
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (Test-Path $iscc) {
+            & $iscc "/DMyAppVersion=$env:VERSION" "tools\installer.iss"
+            $setup = Get-ChildItem -Path dist -Filter '*setup*' -ErrorAction SilentlyContinue
+            if ($setup) { $setup | Select-Object Name, Length } else { Write-Host 'نصب‌کننده ساخته نشد؛ از فایل zip استفاده کنید.' }
+          } else {
+            Write-Host 'Inno Setup روی این رانر نصب نیست؛ فایل zip و exe منتشر می‌شوند.'
+          }
+
+      - name: بارگذاری خروجی ویندوز
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # ۴) انتشار در بخش Releases
+  # ---------------------------------------------------------------------------
+  release:
+    name: انتشار در Releases
+    needs: [prepare, android, windows]
+    if: ${{ github.event_name == 'push' || inputs.create_release }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت خروجی‌های ساخته‌شده
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: فهرست فایل‌های انتشار
+        run: ls -lah dist
+
+      - name: ساخت انتشار گیت‌هاب
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.title }}
+          body: |
+            ## Tel — ویرایشگر متن تلگرام
+
+            **نسخه:** `${{ needs.prepare.outputs.pubspec_version }}`
+
+            ### فایل‌های این انتشار
+            | فایل | توضیح | سازگاری |
+            | --- | --- | --- |
+            | `Tel-${{ needs.prepare.outputs.version }}-android.apk` | برنامهٔ اندروید (نصب مستقیم) | اندروید ۷.۰ تا آخرین نسخه |
+            | `Tel-${{ needs.prepare.outputs.version }}-setup-x64.exe` | فایل نصب ویندوز (در صورت ساخت) | ویندوز ۸.۱ تا ویندوز ۱۱ |
+            | `Tel-${{ needs.prepare.outputs.version }}-windows-x64.exe` | نسخهٔ پرتابل (بدون نصب) | ویندوز ۸.۱ تا ویندوز ۱۱ |
+            | `Tel-${{ needs.prepare.outputs.version }}-windows-x64.zip` | بستهٔ کامل پرتابل (exe + dll + data) | ویندوز ۸.۱ تا ویندوز ۱۱ |
+
+            > **نکتهٔ مهم برای ویندوز:** نسخهٔ پرتابل (`...windows-x64.exe`) فقط وقتی درست کار
+            > می‌کند که فایل‌های `flutter_windows.dll` و پوشهٔ `data` کنارش باشند؛ پس اگر
+            > فایل تک‌فایلی می‌خواهید از فایل نصب (`...setup-x64.exe`) استفاده کنید و اگر
+            > می‌خواهید همه‌چیز را یک‌جا داشته باشید، فایل zip را باز کنید.
+
+            ### توضیحات
+            ${{ inputs.release_notes != '' && inputs.release_notes || 'ساخت خودکار از روی ورک‌فلو گیت‌هاب.' }}
+
+            ---
+            ساخته‌شده با Flutter `${{ env.FLUTTER_VERSION_ANDROID }}` (اندروید) و `${{ env.FLUTTER_VERSION_WINDOWS }}` (ویندوز).
+          files: |
+            dist/*.apk
+            dist/*.exe
+            dist/*.zip
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || false }}
+          generate_release_notes: false
+          make_latest: ${{ !(github.event_name == 'workflow_dispatch' && inputs.prerelease) }}

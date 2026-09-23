@@ -1,0 +1,33 @@
+# --- Dart / Flutter ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+.vscode/
+coverage/
+
+# --- اندروید ---
+android/.gradle/
+android/local.properties
+android/key.properties
+android/app/key.properties
+android/app/*.jks
+android/app/*.keystore
+android/build/
+android/captures/
+android/.idea/
+*.apk
+*.aab
+
+# --- ویندوز ---
+windows/flutter/ephemeral/
+windows/runner/*.suo
+windows/runner/*.user
+
+# --- خروجی‌های ساخت/انتشار ---
+release/
+artifacts/
+*.zip
