@@ -258,7 +258,14 @@ jobs:
   windows:
     name: ساخت EXE ویندوز
     needs: prepare
-    runs-on: windows-latest
+    # windows-2022 و نه windows-latest:
+    #   تصویر windows-latest (از سال ۲۰۲۶) فقط Visual Studio 2026 (نسخهٔ ۱۸) را دارد و
+    #   Flutter 3.19.6 (آخرین نسخهٔ سازگار با ویندوز ۸.۱) فقط تا Visual Studio 2022
+    #   (نسخهٔ ۱۷) را می‌شناسد؛ روی آن تصویر خطای
+    #   «Generator ... could not find any instance of Visual Studio» می‌دهد.
+    #   تصویر windows-2022 همان VS 2022 را دارد و ساخت EXE روی آن موفق است.
+    runs-on: windows-2022
+    timeout-minutes: 60
     steps:
       - name: دریافت کد
         uses: actions/checkout@v4

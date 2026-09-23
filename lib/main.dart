@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'core/app_info.dart';
 import 'i18n/l10n.dart';
+import 'i18n/localizations.dart';
 import 'state/editor_state.dart';
 import 'ui/home_screen.dart';
 import 'ui/theme.dart';
@@ -39,6 +40,9 @@ class TelApp extends StatelessWidget {
             themeMode: state.themeMode,
             locale: Locale(state.language.code),
             supportedLocales: const <Locale>[Locale('fa'), Locale('en')],
+            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+              AppMaterialLocalizationsDelegate(),
+            ],
             builder: (BuildContext context, Widget? inner) {
               return Directionality(
                 textDirection: l10n.direction,

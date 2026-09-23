@@ -1,6 +1,21 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
+
+# Tel: link the C++ runtime statically so the Windows executable does not need
+# the "Visual C++ Redistributable" installed. This matters for running on a
+# clean Windows 8.1 ... Windows 11 machine.
+# CMAKE_MSVC_RUNTIME_LIBRARY requires CMake 3.15+ and policy CMP0091; on older
+# CMake the block below is simply ignored.
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+  cmake_policy(SET CMP0091 NEW)
+endif()
+
 project(tel LANGUAGES CXX)
+
+# Same reason as above: static runtime for every target (runner and plugins).
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.

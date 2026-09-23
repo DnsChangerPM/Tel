@@ -234,7 +234,20 @@ jobs:
         run: |
           flutter build windows --release --build-name 0.0.1 --build-number 1 *> build-exe.txt
           "exit code: $LASTEXITCODE" | Out-File -Append build-exe.txt
-          Get-Content build-exe.txt -Tail 60
+          if ($LASTEXITCODE -eq 0) {
+            "=== PE dependencies (CRT check) ===" | Out-File -Append build-exe.txt
+            $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+            $dumpbin = & $vswhere -latest -find '**\Hostx64\x64\dumpbin.exe' 2>$null | Select-Object -First 1
+            "dumpbin: $dumpbin" | Out-File -Append build-exe.txt
+            $targets = @(Get-ChildItem build\windows -Recurse -Include tel.exe,flutter_windows.dll -ErrorAction SilentlyContinue)
+            foreach ($t in $targets) {
+              "--- $($t.Name) ---" | Out-File -Append build-exe.txt
+              if ($dumpbin) {
+                & $dumpbin /nologo /dependents $t.FullName 2>&1 | Out-File -Append build-exe.txt
+              }
+            }
+          }
+          Get-Content build-exe.txt -Tail 90
 
       - name: ارسال لاگ به‌صورت کامنت PR
         if: always()

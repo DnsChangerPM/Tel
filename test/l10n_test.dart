@@ -1,7 +1,9 @@
 // تست‌های چندزبانگی
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tel/i18n/l10n.dart';
+import 'package:tel/i18n/localizations.dart';
 
 /// همهٔ کلیدهای ترجمه برای بررسی هم‌ارزی دو زبان
 const List<String> allKeys = <String>[
@@ -120,6 +122,25 @@ void main() {
     expect(AppLanguage.fromCode('de'), AppLanguage.fa);
     expect(AppLanguage.fromCode(null), AppLanguage.fa);
     expect(AppLanguage.fromCode('en'), AppLanguage.en);
+  });
+
+  test('متن‌های آمادهٔ Material برای فارسی ترجمه شده‌اند', () {
+    const PersianMaterialLocalizations fa = PersianMaterialLocalizations();
+    expect(fa.okButtonLabel, 'تأیید');
+    expect(fa.cancelButtonLabel, 'انصراف');
+    expect(fa.searchFieldLabel, 'جست‌وجو');
+    // متن‌هایی که ترجمه نشده‌اند از پیش‌فرض انگلیسی به ارث می‌رسند.
+    expect(fa.aboutListTileTitle('Tel'), 'About Tel');
+  });
+
+  test('delegate متن‌های Material همهٔ زبان‌ها را پشتیبانی می‌کند', () {
+    const AppMaterialLocalizationsDelegate delegate = AppMaterialLocalizationsDelegate();
+    // بدون این delegate، زبان فارسی باعث خطای «No MaterialLocalizations found»
+    // در TextField و Tooltip می‌شود.
+    expect(delegate.isSupported(const Locale('fa')), isTrue);
+    expect(delegate.isSupported(const Locale('en')), isTrue);
+    expect(delegate.isSupported(const Locale('de')), isTrue);
+    expect(delegate.shouldReload(delegate), isFalse);
   });
 }
 
