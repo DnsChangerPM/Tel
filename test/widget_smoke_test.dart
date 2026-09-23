@@ -2,8 +2,12 @@
 //
 // اجرا:  flutter test
 //
-// توجه: روی همهٔ پلتفرم‌ها (لینوکس/ویندوز/مک) اجرا می‌شود و به دیالوگ فایل
-// وابسته نیست؛ ذخیره‌سازی با مسیر مستقیم انجام می‌شود.
+// نکته‌های مهم این فایل:
+//   * کارهای واقعی (خواندن/نوشتن فایل، bootstrap و setLanguage) داخل
+//     tester.runAsync انجام می‌شوند؛ در محیط تست ویجت، I/O واقعی بیرون از
+//     runAsync تمام نمی‌شود.
+//   * به‌جای pumpAndSettle از چند pump با زمان محدود استفاده می‌کنیم تا اگر
+//     ویجتی در حال انیمیشن بود، تست بی‌نهایت منتظر نماند.
 
 import 'dart:io';
 
@@ -22,16 +26,27 @@ const String sample = '''<?xml version="1.0" encoding="utf-8"?>
 </resources>
 ''';
 
+/// برنامه را با یک وضعیت آماده بالا می‌آورد
 Future<EditorState> pumpApp(WidgetTester tester, {String? source}) async {
   final EditorState state = EditorState();
-  await state.bootstrap();
-  await state.setLanguage(AppLanguage.fa);
+  // کارهای واقعی (خواندن تنظیمات و نوشتن زبان) بیرون از محیط fake انجام می‌شوند
+  await tester.runAsync(() async {
+    await state.bootstrap();
+    await state.setLanguage(AppLanguage.fa);
+  });
   if (source != null) {
     state.loadText(source, name: 'tg_inline_strings.xml');
   }
   await tester.pumpWidget(TelApp(state: state));
-  await tester.pumpAndSettle();
+  await settle(tester);
   return state;
+}
+
+/// چند فریم می‌پمپ می‌کند (بدون انتظار بی‌پایان)
+Future<void> settle(WidgetTester tester) async {
+  for (int i = 0; i < 4; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -59,7 +74,7 @@ void main() {
     expect(state.filteredEntries.length, 4);
 
     state.setFilter(EntryFilter.untranslated);
-    await tester.pumpAndSettle();
+    await settle(tester);
 
     expect(state.filteredEntries.length, 1, reason: 'فقط یک رشته ترجمه‌نشده است');
     expect(state.filteredEntries.first.name, 'Untranslated');
@@ -69,12 +84,13 @@ void main() {
     final EditorState state = await pumpApp(tester, source: sample);
 
     state.setEntryValue(state.document.entries.first, 'درود بر همه');
-    await tester.pumpAndSettle();
+    await settle(tester);
 
     expect(state.isDirty, isTrue);
     expect(state.document.hasPendingEdits, isTrue);
     expect(state.document.render(), contains('<string name="Greeting">درود بر همه</string>'));
-    expect(state.document.render(), contains('<string name="Untranslated">'), reason: 'بقیهٔ فایل دست‌نخورده');
+    expect(state.document.render(), contains('<string name="Untranslated">'),
+        reason: 'بقیهٔ فایل دست‌نخورده');
   });
 
   testWidgets('ذخیره روی دیسک بدون دست‌زدن به بقیهٔ فایل انجام می‌شود',
@@ -82,17 +98,20 @@ void main() {
     final EditorState state = await pumpApp(tester, source: sample);
     state.setEntryValue(state.document.entries[1], 'حذف برای همه');
 
-    final Directory dir = await Directory.systemTemp.createTemp('tel_widget_test');
-    addTearDown(() => dir.delete(recursive: true));
-    final String path = '${dir.path}/tg_inline_strings.xml';
+    final Directory? dir =
+        await tester.runAsync(() => Directory.systemTemp.createTemp('tel_widget_test'));
+    expect(dir, isNotNull);
+    final String path = '${dir!.path}/tg_inline_strings.xml';
+    addTearDown(() => dir.deleteSync(recursive: true));
 
-    final bool ok = await state.save(explicitPath: path);
-    await tester.pumpAndSettle();
+    final bool? ok = await tester.runAsync(() => state.save(explicitPath: path));
+    await settle(tester);
 
     expect(ok, isTrue);
     final String written = File(path).readAsStringSync();
     expect(written, contains('<string name="Untranslated">حذف برای همه</string>'));
-    expect(written, contains('<string name="Greeting">سلام</string>'), reason: 'رشته‌های دیگر تغییر نکرده‌اند');
+    expect(written, contains('<string name="Greeting">سلام</string>'),
+        reason: 'رشته‌های دیگر تغییر نکرده‌اند');
     expect(written, contains('<string name="SelfClosing"/>'), reason: 'تگ خودبسته حفظ شده است');
     expect(state.isDirty, isFalse, reason: 'بعد از ذخیره دیگر تغییری در انتظار نیست');
   });
@@ -101,8 +120,8 @@ void main() {
     final EditorState state = await pumpApp(tester, source: sample);
     expect(state.l10n.tabEntries, 'رشته‌ها');
 
-    await state.setLanguage(AppLanguage.en);
-    await tester.pumpAndSettle();
+    await tester.runAsync(() => state.setLanguage(AppLanguage.en));
+    await settle(tester);
 
     expect(find.text('Strings'), findsWidgets);
     expect(find.text('Validation'), findsWidgets);
