@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tel — فایل مرجع انگلیسی نمونه.
+  این فایل همان کلیدهای نمونهٔ فارسی را دارد و برای بررسی خودکار قالب‌های
+  %1$s و %d در تب «بررسی سلامت» به‌عنوان مرجع بارگذاری می‌شود.
+-->
+<resources>
+    <string name="AppName">Telegram</string>
+    <string name="AppNameBeta">Telegram Beta</string>
+
+    <string name="PermissionStorage">Storage access</string>
+    <string name="PermissionNoAudio">Telegram doesn\'t have permission to record audio.</string>
+    <string name="PermissionNoCamera">Telegram doesn\'t have permission to use the camera.</string>
+
+    <string name="VoipGroupDisableAutoDelete">Disable auto-delete</string>
+    <string name="VoipGroupEnableAutoDelete">Auto-delete after %1$d days</string>
+    <string name="VoipGroupAudioStream">Live stream link</string>
+    <string name="VoipGroupStartVideo">Start video stream</string>
+    <string name="VoipGroupStopVideo">Stop video stream</string>
+    <string name="VoipGroupYouAreMuted">You are muted</string>
+    <string name="VoipGroupHoldToTalk">Hold to talk</string>
+
+    <string name="ChatAdmin">Admin</string>
+    <string name="ChatCreator">Owner</string>
+    <string name="ChatDeletedMessages">Message deleted</string>
+    <string name="ChatMessageEdited">edited</string>
+    <string name="ChatForwardedFrom">Forwarded from %1$s</string>
+    <string name="ChatSending">Sending…</string>
+    <string name="ChatUnreadMessages">unread message</string>
+    <string name="ChatTyping">typing…</string>
+    <string name="ChatReply">Reply</string>
+    <string name="ChatCopy">Copy</string>
+    <string name="ChatForward">Forward</string>
+    <string name="ChatDelete">Delete</string>
+
+    <string name="LoginTitle">Sign in</string>
+    <string name="LoginPasswordHint">Enter your two-step verification password</string>
+    <string name="LoginCodeHint">Enter the code from %1$s</string>
+    <string name="LoginWrongCode">The code you entered is invalid.</string>
+
+    <string name="SettingsLanguage">Language</string>
+    <string name="SettingsThemeDark">Dark theme</string>
+    <string name="SettingsThemeLight">Light theme</string>
+    <string name="SettingsAutoDownloadMedia">Auto-download media\nWi-Fi only</string>
+    <string name="SettingsDataUsage">Data and storage</string>
+    <string name="SettingsPrivacySecurity">Privacy and security</string>
+
+    <string name="StorageUsageClearingCache">Clearing cache…</string>
+    <string name="StorageUsageFreed">%1$s freed up</string>
+    <string name="StorageUsageEmpty">Cache is empty</string>
+
+    <string name="StoryViewers">Viewers</string>
+    <string name="StoryShareOwn">Share story</string>
+    <string name="StoryPosting">Posting…</string>
+
+    <string name="PremiumTitle">Telegram Premium</string>
+    <string name="PremiumFreeTrial">Free trial</string>
+    <string name="PremiumDescription">Get access to <b>Premium</b> features</string>
+
+    <string name="UpdateAvailable">A new version is available</string>
+    <string name="UpdateNow">Update</string>
+
+    <string name="UnsavedTranslationExample">Delete for all members</string>
+    <string name="AnotherUntranslatedExample">Unmute</string>
+
+    <string name="VideoPlayerStreamingServer" translatable="false">tg://streaming</string>
+
+    <string name="PlaceholderEmptyValue"></string>
+</resources>

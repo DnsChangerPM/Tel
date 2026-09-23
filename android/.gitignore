@@ -1,0 +1,12 @@
+gradle-wrapper.jar.bak
+/local.properties
+/key.properties
+/app/key.properties
+/app/*.jks
+/tel-release.jks
+/app/*.keystore
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/

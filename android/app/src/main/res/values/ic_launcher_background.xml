@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- رنگ پس‌زمینهٔ آیکن تطبیقی (اندروید ۸ و بالاتر) -->
+    <color name="ic_launcher_background">#1666C5</color>
+</resources>

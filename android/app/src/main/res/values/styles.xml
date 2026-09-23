@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tel — تم‌های برنامه (اسپلش و تم عادی) -->
+<resources>
+    <!-- تمی که وقتی برنامه در حال بالا آمدن است و حالت تیرهٔ سیستم خاموش است -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <!-- تمی که به‌محض شروع فرایند اعمال می‌شود و پشت رابط Flutter می‌ماند -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>

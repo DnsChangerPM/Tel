@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- مجوز اینترنت فقط برای حالت توسعه لازم است: ارتباط ابزار Flutter با
+         برنامهٔ در حال اجرا (Hot Reload / دیباگ). نسخهٔ نهایی (release)
+         به هیچ مجوزی نیاز ندارد. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>
