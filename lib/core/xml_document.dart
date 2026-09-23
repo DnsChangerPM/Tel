@@ -98,6 +98,7 @@ class XmlStringEntry {
 class XmlDocument {
   XmlDocument({String source = ''}) : _fingerprint = _fp(source) {
     this.source = source;
+    originalSource = source;
     _parse();
   }
 

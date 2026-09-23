@@ -124,5 +124,5 @@ void main() {
 }
 
 extension on L10n {
-  String? tableValue(String key) => L10n.table[key]?[language.code];
+  String? tableValue(String key) => L10n.table[language.code]?[key];
 }

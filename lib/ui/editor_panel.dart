@@ -151,7 +151,7 @@ class _EditorPanelState extends State<EditorPanel> {
         i += 2;
         continue;
       }
-      final RegExpMatch? named = RegExp('[A-Za-z_][A-Za-z0-9_]*').matchAsPrefix(template, i + 1);
+      final Match? named = RegExp('[A-Za-z_][A-Za-z0-9_]*').matchAsPrefix(template, i + 1);
       if (named == null) {
         out.write(ch);
         i++;

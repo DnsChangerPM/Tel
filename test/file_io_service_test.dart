@@ -58,7 +58,7 @@ void main() {
 
       final List<int> raw = await File(path).readAsBytes();
       expect(raw.sublist(0, 3), isNot(<int>[0xEF, 0xBB, 0xBF]), reason: 'نباید BOM داشته باشد');
-      expect(await File(path).readAsString(), endsWith('</resources/>\n'));
+      expect(await File(path).readAsString(), endsWith('<resources/>\n'));
 
       final OpenedTextFile opened = await service.readFileByPath(path);
       expect(opened.name, 'tg_inline_strings.xml');
