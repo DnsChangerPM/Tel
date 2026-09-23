@@ -39,31 +39,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // ---------------------------------------------------------------------------
 
   Future<void> _openFile() async {
-    if (!await _confirmDiscard()) return;
+    if (!await _confirmDiscard() || !mounted) return;
     await state.openFile();
   }
 
   Future<void> _save() async {
     final bool ok = await state.save();
-    if (ok) _toast(state.l10n.statusSaved);
+    if (ok && mounted) _toast(state.l10n.statusSaved);
   }
 
   Future<void> _saveAs() async {
     final bool ok = await state.save(asNew: true);
-    if (ok) _toast(state.l10n.statusSaved);
+    if (ok && mounted) _toast(state.l10n.statusSaved);
   }
 
   Future<void> _paste() async {
-    if (!await _confirmDiscard()) return;
+    if (!await _confirmDiscard() || !mounted) return;
     final String? text = await state.pasteFromClipboard();
+    if (!mounted) return;
     if (text == null) {
       _toast(state.l10n.statusError, isError: true);
     }
   }
 
   Future<void> _sample() async {
-    if (!await _confirmDiscard()) return;
+    if (!await _confirmDiscard() || !mounted) return;
     await state.loadSample();
+    if (!mounted) return;
     _toast(state.l10n.sampleNotice);
   }
 
@@ -100,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     // آزادسازی کنترلر بعد از بسته‌شدن کامل دیالوگ
     Future<void>.delayed(const Duration(milliseconds: 500), controller.dispose);
     if (result == null || result.trim().isEmpty) return;
-    if (!await _confirmDiscard()) return;
+    if (!await _confirmDiscard() || !mounted) return;
     await state.openPath(result);
   }
 

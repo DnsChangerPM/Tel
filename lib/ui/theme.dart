@@ -48,13 +48,6 @@ class AppTheme {
       visualDensity: VisualDensity.standard,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: const TextTheme().apply(fontFamily: fontFamily),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: <TargetPlatform, PageTransitionsBuilder>{
-          TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-        },
-      ),
     );
   }
 

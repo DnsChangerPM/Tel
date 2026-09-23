@@ -120,7 +120,7 @@ class XmlDocument {
   static String _fp(String s) => s;
 
   void _parse() {
-    entries = _parser.parse(source).entries;
+    entries = _parser.parse(source);
     _fingerprint = _fp(source);
   }
 

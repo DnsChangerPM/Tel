@@ -144,8 +144,9 @@ void main() {
       const String dup = '<resources><string name="A">یک</string><string name="A">دو</string></resources>';
       final XmlDocument doc = XmlDocument(source: dup);
       expect(doc.entries.length, 2);
+      expect(doc.entries[0].isDuplicate, isTrue, reason: 'هر دو ردیف تکراری علامت می‌خورند');
       expect(doc.entries[1].isDuplicate, isTrue);
-      expect(doc.duplicates.length, 1);
+      expect(doc.duplicates.length, 2);
 
       doc.setValue(doc.entries.first, 'سه');
       expect(

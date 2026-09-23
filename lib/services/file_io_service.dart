@@ -224,7 +224,7 @@ class FileIoService {
     String? fileName,
   }) async {
     final StringBuffer header = StringBuffer()
-      ..writeln(r'$ErrorActionPreference = "Stop"')
+      ..writeln(r"$ErrorActionPreference = 'Stop'")
       ..writeln(r'[Console]::OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false')
       ..writeln(r'Add-Type -AssemblyName System.Windows.Forms | Out-Null')
       ..writeln(r'Add-Type -AssemblyName System.Drawing | Out-Null');

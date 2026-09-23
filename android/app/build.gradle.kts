@@ -15,10 +15,15 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // پلاگین کاتلین (نسخه‌اش در android/settings.gradle.kts تعیین شده است)؛
-    // لازم است چون android.builtInKotlin=false است و MainActivity.kt کاتلین است.
-    id("kotlin-android")
-    // پلاگین Flutter باید بعد از پلاگین‌های اندروید و کاتلین اعمال شود.
+    // پلاگین Flutter باید بعد از پلاگین اندروید اعمال شود.
+    //
+    // نکته دربارهٔ کاتلین: در AGP 9، کاتلین به‌صورت «built-in» فعال است و
+    // قالب رسمی Flutter 3.47.5 برای سازگاری موقت، پرچم
+    // android.builtInKotlin=false را در gradle.properties می‌گذارد. در این حالت
+    // خودِ پلاگین Flutter، پلاگین kotlin-android را روی ماژول‌ها اعمال می‌کند
+    // (نسخه‌اش در android/settings.gradle.kts = 2.4.0 تعریف شده است).
+    // پس اینجا نباید kotlin-android را دستی اضافه کرد؛ در غیر این صورت
+    // Flutter هشدار «migrate to built-in Kotlin» را در لاگ چاپ می‌کند.
     id("dev.flutter.flutter-gradle-plugin")
 }
 

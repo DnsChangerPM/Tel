@@ -35,6 +35,8 @@ FORBIDDEN_IN_DART = {
     "DialogThemeData": "DialogThemeData از Flutter 3.27 است",
     "CarouselView": "CarouselView از Flutter 3.24 است",
     "RadioGroup": "RadioGroup از Flutter 3.32 است",
+    # حذف‌شده‌ها: در نسخه‌های جدید Flutter وجود ندارند و ساخت اندروید را می‌شکنند
+    "FadeUpwardsPageTransitionsBuilder": "این کلاس در Flutter 3.44 حذف شده است؛ از pageTransitionsTheme استفاده نکنید",
     "Expansible": "Expansible از Flutter 3.32 است",
 }
 
@@ -449,6 +451,34 @@ def check_horizontal_scroll_flex() -> None:
             index = end
 
 
+
+def check_android_gradle_conventions() -> None:
+    """قواعد لازم برای ساخت اندروید با AGP 9 و قالب رسمی Flutter 3.47.5"""
+    properties = (ROOT / "android/gradle.properties").read_text(encoding="utf-8")
+    if "android.builtInKotlin=false" not in properties:
+        errors.append(
+            "android/gradle.properties باید android.builtInKotlin=false داشته باشد "
+            "(سازگاری موقت قالب Flutter 3.47.5 با AGP 9)"
+        )
+    if "android.newDsl=false" not in properties:
+        errors.append(
+            "android/gradle.properties باید android.newDsl=false داشته باشد "
+            "(سازگاری موقت DSL قدیمی با AGP 9)"
+        )
+    app_gradle = (ROOT / "android/app/build.gradle.kts").read_text(encoding="utf-8")
+    body = re.sub(r"//[^\n]*", "", app_gradle)  # کامنت‌ها حذف می‌شوند
+    if re.search(r"id\s*\(\s*[\"']kotlin-android[\"']\s*\)", body):
+        errors.append(
+            "android/app/build.gradle.kts نباید kotlin-android را دستی اضافه کند؛ "
+            "با android.builtInKotlin=false خود پلاگین Flutter آن را اعمال می‌کند"
+        )
+    settings = (ROOT / "android/settings.gradle.kts").read_text(encoding="utf-8")
+    if "org.jetbrains.kotlin.android" not in settings:
+        errors.append("android/settings.gradle.kts باید org.jetbrains.kotlin.android را در بلوک plugins اعلام کند")
+    if "dev.flutter.flutter-plugin-loader" not in settings:
+        errors.append("android/settings.gradle.kts باید dev.flutter.flutter-plugin-loader را داشته باشد")
+
+
 def main() -> int:
     dart = dart_files()
     for path in dart:
@@ -463,6 +493,7 @@ def main() -> int:
     check_version_policy()
     check_l10n_tables()
     check_horizontal_scroll_flex()
+    check_android_gradle_conventions()
 
     print(f"بررسی {len(dart)} فایل Dart ... تمام شد")
     if warnings:
