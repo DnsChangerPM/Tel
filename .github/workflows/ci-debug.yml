@@ -162,9 +162,62 @@ jobs:
           post_comment('APK build log', body)
           PY
 
-  build-windows:
-    name: build EXE
+  diagnose-windows:
+    name: diagnose windows runner
     runs-on: windows-latest
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب Flutter 3.19.6
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.19.6'
+
+      - name: اطلاعات محیط ساخت ویندوز
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $out = 'diag.txt'
+          "=== vswhere -all -prerelease ===" | Out-File $out
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          "vswhere exists: $(Test-Path $vswhere)" | Out-File -Append $out
+          & $vswhere -all -prerelease -format json 2>&1 | Out-File -Append $out
+          "=== VS folders ===" | Out-File -Append $out
+          Get-ChildItem 'C:\Program Files\Microsoft Visual Studio' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name | Out-File -Append $out
+          Get-ChildItem 'C:\Program Files (x86)\Microsoft Visual Studio' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name | Out-File -Append $out
+          "=== cmake versions found ===" | Out-File -Append $out
+          & $vswhere -all -prerelease -find '**\cmake.exe' 2>&1 | Out-File -Append $out
+          "=== runner os ===" | Out-File -Append $out
+          "$env:ImageOS $env:ImageVersion" | Out-File -Append $out
+          "=== flutter doctor -v ===" | Out-File -Append $out
+          flutter doctor -v 2>&1 | Out-File -Append $out
+          Get-Content $out
+
+      - name: ارسال اطلاعات به‌صورت کامنت PR
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $log = Get-Content diag.txt -Raw -ErrorAction SilentlyContinue
+          if (-not $log) { $log = '(no log file)' }
+          if ($log.Length -gt 40000) { $log = $log.Substring($log.Length - 40000) }
+          $fence = '```'
+          $body = @{ body = "### Windows runner diagnostics (windows-latest)`n$fence`n$log`n$fence" } | ConvertTo-Json -Depth 3
+          Invoke-RestMethod -Method Post `
+            -Uri 'https://api.github.com/repos/DnsChangerPM/Tel/issues/1/comments' `
+            -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
+            -Body $body -ContentType 'application/json'
+
+  build-windows:
+    name: build EXE on ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ['windows-2022', 'windows-latest']
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: دریافت کد
         uses: actions/checkout@v4
@@ -188,13 +241,13 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUNNER_LABEL: ${{ matrix.runner }}
         run: |
           $log = Get-Content build-exe.txt -Raw -ErrorAction SilentlyContinue
           if (-not $log) { $log = '(no log file)' }
           if ($log.Length -gt 40000) { $log = $log.Substring($log.Length - 40000) }
           $fence = '```'
-          $body = @{ body = "### EXE build log (Flutter 3.19.6)`n$fence`n$log`n$fence" } |
-            ConvertTo-Json -Depth 3
+          $body = @{ body = "### EXE build log (Flutter 3.19.6, $env:RUNNER_LABEL)`n$fence`n$log`n$fence" } | ConvertTo-Json -Depth 3
           Invoke-RestMethod -Method Post `
             -Uri 'https://api.github.com/repos/DnsChangerPM/Tel/issues/1/comments' `
             -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
