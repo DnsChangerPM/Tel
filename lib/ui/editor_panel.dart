@@ -64,16 +64,23 @@ class _EditorPanelState extends State<EditorPanel> {
   }
 
   void _syncFromState(EditorState state) {
-    if (_controller.text != state.document.source) {
+    final String text = state.document.source;
+    if (_controller.text == text) return;
+    // همگام‌سازی در پایان فریم انجام می‌شود تا هنگام build وضعیت عوض نشود.
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (!mounted) return;
+      if (_controller.text == text) return;
+      final int max = text.length;
       final TextSelection selection = _controller.selection;
       _controller.value = TextEditingValue(
-        text: state.document.source,
-        selection: selection.baseOffset <= state.document.source.length
-            ? selection
-            : TextSelection.collapsed(offset: state.document.source.length),
+        text: text,
+        selection: TextSelection(
+          baseOffset: selection.baseOffset.clamp(0, max),
+          extentOffset: selection.extentOffset.clamp(0, max),
+        ),
       );
       _updateCursor();
-    }
+    });
   }
 
   void _updateCursor() {
@@ -184,7 +191,7 @@ class _EditorPanelState extends State<EditorPanel> {
     setState(() {});
     if (count > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${num(context, count)} ${AppScope.of(context).l10n.matchesFound}')),
+        SnackBar(content: Text('${faNum(context, count)} ${AppScope.of(context).l10n.matchesFound}')),
       );
     }
   }
@@ -293,54 +300,59 @@ class _EditorPanelState extends State<EditorPanel> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: <Widget>[
-                    FilterChip(
-                      label: Text(l10n.useRegex, style: const TextStyle(fontSize: 11.5)),
-                      selected: _regex,
-                      onSelected: (bool v) => setState(() => _regex = v),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    const SizedBox(width: 6),
-                    FilterChip(
-                      label: Text(l10n.caseSensitive, style: const TextStyle(fontSize: 11.5)),
-                      selected: _caseSensitive,
-                      onSelected: (bool v) => setState(() => _caseSensitive = v),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    const SizedBox(width: 8),
-                    if (_regexError != null)
-                      Expanded(
-                        child: Text(
-                          _regexError!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 11.5, color: scheme.error),
-                        ),
-                      )
-                    else
-                      InfoChip(
-                        label: '${num(context, matches)} ${l10n.matchesFound}',
-                        icon: Icons.filter_alt_outlined,
-                        color: matches > 0 ? scheme.primary : scheme.onSurfaceVariant,
+                // روی صفحه‌های باریک (گوشی) این ردیف قابل اسکرول افقی است
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: <Widget>[
+                      FilterChip(
+                        label: Text(l10n.useRegex, style: const TextStyle(fontSize: 11.5)),
+                        selected: _regex,
+                        onSelected: (bool v) => setState(() => _regex = v),
+                        visualDensity: VisualDensity.compact,
                       ),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: matches > 0 ? _findNext : null,
-                      icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                      label: Text(l10n.goToNext),
-                    ),
-                    TextButton.icon(
-                      onPressed: matches > 0 ? _replaceCurrent : null,
-                      icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: Text(l10n.replace),
-                    ),
-                    FilledButton.tonalIcon(
-                      onPressed: matches > 0 ? _replaceAllMatches : null,
-                      icon: const Icon(Icons.auto_fix_high, size: 18),
-                      label: Text(l10n.replaceAll),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      FilterChip(
+                        label: Text(l10n.caseSensitive, style: const TextStyle(fontSize: 11.5)),
+                        selected: _caseSensitive,
+                        onSelected: (bool v) => setState(() => _caseSensitive = v),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      const SizedBox(width: 8),
+                      if (_regexError != null)
+                        SizedBox(
+                          width: 240,
+                          child: Text(
+                            _regexError!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 11.5, color: scheme.error),
+                          ),
+                        )
+                      else
+                        InfoChip(
+                          label: '${faNum(context, matches)} ${l10n.matchesFound}',
+                          icon: Icons.filter_alt_outlined,
+                          color: matches > 0 ? scheme.primary : scheme.onSurfaceVariant,
+                        ),
+                      const SizedBox(width: 16),
+                      TextButton.icon(
+                        onPressed: matches > 0 ? _findNext : null,
+                        icon: const Icon(Icons.keyboard_arrow_down, size: 18),
+                        label: Text(l10n.goToNext),
+                      ),
+                      TextButton.icon(
+                        onPressed: matches > 0 ? _replaceCurrent : null,
+                        icon: const Icon(Icons.swap_horiz, size: 18),
+                        label: Text(l10n.replace),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: matches > 0 ? _replaceAllMatches : null,
+                        icon: const Icon(Icons.auto_fix_high, size: 18),
+                        label: Text(l10n.replaceAll),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -376,18 +388,17 @@ class _EditorPanelState extends State<EditorPanel> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
                     children: <Widget>[
-                      InfoChip(label: '${l10n.lineLabel}: ${num(context, _cursorLine)}', icon: Icons.tag),
-                      const SizedBox(width: 6),
-                      InfoChip(label: '${num(context, _cursorColumn)}', icon: Icons.arrow_right_alt),
-                      const SizedBox(width: 6),
+                      InfoChip(label: '${l10n.lineLabel}: ${faNum(context, _cursorLine)}', icon: Icons.tag),
+                      InfoChip(label: '${faNum(context, _cursorColumn)}', icon: Icons.arrow_right_alt),
                       InfoChip(
-                        label: '${num(context, _controller.text.length)} char',
+                        label: '${l10n.charLabel}: ${faNum(context, _controller.text.length)}',
                         icon: Icons.data_object,
                         color: scheme.onSurfaceVariant,
                       ),
-                      const Spacer(),
                       InfoChip(
                         label: state.isDirty ? l10n.statusDirty : l10n.statusSaved,
                         color: state.isDirty ? scheme.error : scheme.tertiary,

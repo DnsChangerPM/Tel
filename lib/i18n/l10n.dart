@@ -112,6 +112,8 @@ class L10n {
 
   String get lineLabel => _t('lineLabel');
 
+  String get charLabel => _t('charLabel');
+
   String get placeholders => _t('placeholders');
 
   String get notTranslatable => _t('notTranslatable');
@@ -134,6 +136,9 @@ class L10n {
   String get statusDirty => _t('statusDirty');
 
   String get statusSaved => _t('statusSaved');
+
+  /// پرسش هنگام دور ریختن تغییرات ذخیره‌نشده
+  String get discardQuestion => _t('discardQuestion');
 
   String get statusSavedTo => _t('statusSavedTo');
 
@@ -198,8 +203,6 @@ class L10n {
 
   String get sampleNotice => _t('sampleNotice');
 
-  String get discardQuestion => _t('discardQuestion');
-
   String get copyReport => _t('copyReport');
 
   String get pathLabel => _t('pathLabel');
@@ -251,6 +254,7 @@ class L10n {
       'keyLabel': 'نام',
       'valueLabel': 'متن',
       'lineLabel': 'خط',
+      'charLabel': 'کاراکتر',
       'placeholders': 'قالب‌ها',
       'notTranslatable': 'ترجمه‌نشدنی',
       'edited': 'ویرایش‌شده',
@@ -358,6 +362,7 @@ class L10n {
       'keyLabel': 'Key',
       'valueLabel': 'Text',
       'lineLabel': 'Line',
+      'charLabel': 'characters',
       'placeholders': 'Placeholders',
       'notTranslatable': 'not translatable',
       'edited': 'edited',

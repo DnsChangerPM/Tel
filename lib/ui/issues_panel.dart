@@ -42,9 +42,9 @@ class IssuesPanel extends StatelessWidget {
                         state.showStatus(
                           fresh.issues.isEmpty
                               ? l10n.noIssues
-                              : '${num(context, fresh.errorCount)} ${l10n.severityError} • '
-                                  '${num(context, fresh.warningCount)} ${l10n.severityWarning} • '
-                                  '${num(context, fresh.infoCount)} ${l10n.severityInfo}',
+                              : '${faNum(context, fresh.errorCount)} ${l10n.severityError} • '
+                                  '${faNum(context, fresh.warningCount)} ${l10n.severityWarning} • '
+                                  '${faNum(context, fresh.infoCount)} ${l10n.severityInfo}',
                           isError: fresh.hasErrors,
                         );
                       },
@@ -79,31 +79,31 @@ class IssuesPanel extends StatelessWidget {
                   runSpacing: 8,
                   children: <Widget>[
                     InfoChip(
-                      label: '${l10n.severityError}: ${num(context, report?.errorCount ?? 0)}',
+                      label: '${l10n.severityError}: ${faNum(context, report?.errorCount ?? 0)}',
                       icon: Icons.error_outline,
                       color: scheme.error,
                       dense: false,
                     ),
                     InfoChip(
-                      label: '${l10n.severityWarning}: ${num(context, report?.warningCount ?? 0)}',
+                      label: '${l10n.severityWarning}: ${faNum(context, report?.warningCount ?? 0)}',
                       icon: Icons.warning_amber_rounded,
                       color: AppTheme.brandOrange,
                       dense: false,
                     ),
                     InfoChip(
-                      label: '${l10n.severityInfo}: ${num(context, report?.infoCount ?? 0)}',
+                      label: '${l10n.severityInfo}: ${faNum(context, report?.infoCount ?? 0)}',
                       icon: Icons.tips_and_updates_outlined,
                       color: scheme.tertiary,
                       dense: false,
                     ),
                     InfoChip(
-                      label: '${l10n.entryCount}: ${num(context, state.document.length)}',
+                      label: '${l10n.entryCount}: ${faNum(context, state.document.length)}',
                       icon: Icons.list_alt,
                       color: scheme.primary,
                       dense: false,
                     ),
                     InfoChip(
-                      label: '${l10n.filterUntranslated}: ${num(context, state.document.untranslatedCount)}',
+                      label: '${l10n.filterUntranslated}: ${faNum(context, state.document.untranslatedCount)}',
                       icon: Icons.translate,
                       color: AppTheme.brandTeal,
                       dense: false,
@@ -170,7 +170,7 @@ class _IssueTile extends StatelessWidget {
                 Text(
                   <String>[
                     issue.code,
-                    if (issue.line != null) '${AppScope.of(context).l10n.lineLabel} ${num(context, issue.line!)}',
+                    if (issue.line != null) '${AppScope.of(context).l10n.lineLabel} ${faNum(context, issue.line!)}',
                     if (issue.name != null) issue.name!,
                   ].join(' • '),
                   style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),

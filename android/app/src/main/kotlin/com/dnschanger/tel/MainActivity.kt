@@ -16,13 +16,13 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.provider.OpenableColumns
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.BufferedReader
+import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 
@@ -203,12 +203,17 @@ class MainActivity : FlutterActivity() {
 
     private fun writeText(uri: Uri, contents: String) {
         val resolver: ContentResolver = contentResolver
-        val stream = resolver.openOutputStream(uri, "wt")
+        // توجه: openOutputStream(uri, mode) فقط از اندروید ۸ (API 26) وجود دارد؛
+        // برای پشتیبانی اندروید ۷ از openFileDescriptor استفاده می‌کنیم که از
+        // API 19 در دسترس است. حالت "wt" یعنی بازنویسی کامل فایل قبلی.
+        val descriptor = resolver.openFileDescriptor(uri, "wt")
             ?: throw IllegalStateException("امکان نوشتن در مقصد وجود ندارد")
-        stream.use { output ->
-            val writer = OutputStreamWriter(output, Charsets.UTF_8)
-            writer.write(contents)
-            writer.flush()
+        descriptor.use { parcel ->
+            FileOutputStream(parcel.fileDescriptor).use { output ->
+                val writer = OutputStreamWriter(output, Charsets.UTF_8)
+                writer.write(contents)
+                writer.flush()
+            }
         }
     }
 

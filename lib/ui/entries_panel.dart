@@ -48,7 +48,7 @@ class EntriesPanel extends StatelessWidget {
                     const SizedBox(width: 8),
                     InfoChip(
                       label:
-                          '${num(context, entries.length)} / ${num(context, state.document.length)}',
+                          '${faNum(context, entries.length)} / ${faNum(context, state.document.length)}',
                       icon: Icons.list_alt,
                     ),
                   ],
@@ -168,9 +168,15 @@ class _EntryTileState extends State<EntryTile> {
     final List<String> placeholders = entry.placeholders;
     final String currentValue = state.document.valueOf(entry);
 
-    // اگر مقدار از بیرون تغییر کرده (مثلاً «برگشت همه») و کاربر در حال تایپ نیست
+    // اگر مقدار از بیرون تغییر کرده (مثلاً «برگشت همه») و کاربر در حال تایپ نیست،
+    // همگام‌سازی در پایان فریم انجام می‌شود تا هنگام build وضعیت عوض نشود.
     if (!_isFocused && _controller.text != currentValue) {
-      _controller.text = currentValue;
+      final String value = currentValue;
+      WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+        if (!mounted || _focusNode.hasFocus) return;
+        if (_controller.text == value) return;
+        _controller.text = value;
+      });
     }
 
     final List<Widget> badges = <Widget>[
@@ -190,31 +196,29 @@ class _EntryTileState extends State<EntryTile> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
+          SelectableText(
+            entry.name,
+            maxLines: 1,
+            style: AppTheme.monoStyle(context, size: 12.5, color: scheme.primary),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Expanded(
-                child: SelectableText(
-                  entry.name,
-                  maxLines: 1,
-                  style: AppTheme.monoStyle(context, size: 12.5, color: scheme.primary),
-                ),
-              ),
-              const SizedBox(width: 6),
               if (edited)
                 InfoChip(label: l10n.edited, icon: Icons.edit, color: scheme.primary, dense: true),
-              const SizedBox(width: 6),
               InfoChip(
-                label: '${l10n.lineLabel} ${num(context, entry.line)}',
+                label: '${l10n.lineLabel} ${faNum(context, entry.line)}',
+                icon: Icons.tag,
                 color: scheme.onSurfaceVariant,
+                dense: true,
               ),
+              ...badges,
             ],
           ),
-          if (badges.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Wrap(spacing: 6, runSpacing: 6, children: badges),
-            ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -232,7 +236,7 @@ class _EntryTileState extends State<EntryTile> {
                     fillColor: scheme.surface,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: const OutlineInputBorder(),
-                    hintText: entry.value.isEmpty ? '(خالی)' : null,
+                    hintText: entry.value.isEmpty ? '(${l10n.filterEmpty})' : null,
                   ),
                 ),
               ),

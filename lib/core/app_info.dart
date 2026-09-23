@@ -50,4 +50,17 @@ Tel یک ویرایشگر متن برای فایل‌های XML ترجمهٔ ت�
 • ذخیرهٔ فایل بدون تغییر بقیهٔ خطوط (کامنت‌ها، ترتیب و فاصله‌ها دست‌نخورده می‌مانند)
 • تأیید اعتبار XML و خروجی UTF-8 بدون BOM
 ''';
+
+  static const String aboutEn = '''
+Tel is a text editor for Telegram translation XML files.
+
+Highlights:
+• Open a Telegram strings.xml file (tg_inline_strings.xml)
+• See every string as a list and edit them one by one
+• Search and replace (regular expressions supported)
+• Validate the file: unbalanced tags, duplicate names, empty values,
+  untranslated entries and placeholder mismatches
+• Save without touching the rest of the file (comments, order and spacing
+  are preserved) and always write UTF-8 without BOM
+''';
 }

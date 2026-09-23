@@ -15,7 +15,10 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // توجه: پلاگین Flutter باید بعد از پلاگینهای اندروید اعمال شود.
+    // پلاگین کاتلین (نسخه‌اش در android/settings.gradle.kts تعیین شده است)؛
+    // لازم است چون android.builtInKotlin=false است و MainActivity.kt کاتلین است.
+    id("kotlin-android")
+    // پلاگین Flutter باید بعد از پلاگین‌های اندروید و کاتلین اعمال شود.
     id("dev.flutter.flutter-gradle-plugin")
 }
 

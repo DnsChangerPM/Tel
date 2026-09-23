@@ -1,13 +1,13 @@
 //
 //  Generated file. Do not edit.
 //
-//  برنامهٔ Tel پلاگین ویندوزی ندارد؛ این فایل برای سازگاری با ساختار پروژه‌های
-//  Flutter روی ویندوز نگه داشته شده است. (اگر پلاگینی اضافه شود، Flutter این
-//  فایل را بازنویسی می‌کند.)
+//  Tel has no Windows plugins; this file is kept so the project layout matches
+//  the standard Flutter Windows template. Flutter rewrites it whenever a
+//  plugin is added.
 //
 
 #include "generated_plugin_registrant.h"
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  // هیچ پلاگینی ثبت نمی‌شود.
+  // No plugins are registered.
 }

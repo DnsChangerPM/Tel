@@ -1,9 +1,9 @@
 #
 # Generated file, do not edit.
 #
-# توجه: برنامهٔ Tel هیچ پلاگین ویندوزی ندارد (انتخاب فایل با دیالوگ بومی ویندوز
-# و از طریق PowerShell انجام می‌شود)، بنابراین هر دو فهرست خالی هستند. اگر روزی
-# پلاگینی اضافه کردید، این فایل به‌طور خودکار توسط Flutter بازنویسی می‌شود.
+# Note: Tel has no Windows plugins (file picking uses the native Windows dialog
+# through PowerShell), so both lists below are empty. Flutter rewrites this file
+# automatically when a plugin is added.
 
 list(APPEND FLUTTER_PLUGIN_LIST
 )

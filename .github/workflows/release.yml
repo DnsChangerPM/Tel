@@ -275,6 +275,9 @@ jobs:
 
       - name: نوشتن نسخه در pubspec.yaml
         shell: pwsh
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: 'utf-8'
         run: python tools/set_version.py "${{ needs.prepare.outputs.pubspec_version }}"
 
       - name: دریافت وابستگی‌ها

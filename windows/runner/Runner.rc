@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.dnschanger" "\0"
-            VALUE "FileDescription", "tel" "\0"
+            VALUE "CompanyName", "DnsChangerPM" "\0"
+            VALUE "FileDescription", "Tel - Telegram strings editor" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tel" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.dnschanger. All rights reserved." "\0"
+            VALUE "InternalName", "Tel" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 DnsChangerPM - MIT License" "\0"
             VALUE "OriginalFilename", "tel.exe" "\0"
-            VALUE "ProductName", "tel" "\0"
+            VALUE "ProductName", "Tel" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -102,18 +102,19 @@ class XmlValidator {
       ));
     }
 
-    // ۲) کاراکتر & که موجودیت معتبری را شروع نمی‌کند
+    // ۲) کاراکتر & که می‌تواند یک موجودیت معتبر را شروع کند اما نمی‌کند
     int line = 1;
     bool reportedEntity = false;
     for (int i = 0; i < source.length && !reportedEntity; i++) {
       if (source.codeUnitAt(i) == 0x0A) line++;
       if (source[i] != '&') continue;
-      final String slice = source.substring(i);
-      if (_validEntity.matchAsPrefix(slice) == null) {
+      // فقط در فایل XML، «&» بدون escape یک خطای واقعی است.
+      // &#38; و &amp; و ... معتبرند؛ پس اگر موجودیت معتبر بعد از & نیاید، خطا است.
+      if (_validEntity.matchAsPrefix(source.substring(i)) == null) {
         issues.add(ValidationIssue(
           severity: IssueSeverity.error,
           code: 'invalid-entity',
-          message: 'کاراکتر & بدون escape معتبر در متن هست (باید &amp; باشد).',
+          message: 'کاراکتر & بدون escape در خط $line؛ باید &amp; نوشته شود.',
           line: line,
         ));
         reportedEntity = true;

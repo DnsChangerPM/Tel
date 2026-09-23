@@ -109,7 +109,7 @@ class HelpPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 SelectableText(
-                  AppInfo.aboutFa.trim(),
+                  (state.language == AppLanguage.en ? AppInfo.aboutEn : AppInfo.aboutFa).trim(),
                   style: const TextStyle(fontSize: 13, height: 1.9),
                 ),
                 const SizedBox(height: 12),

@@ -47,7 +47,6 @@ class EditorState extends ChangeNotifier {
   bool busy = false;
   EntryFilter filter = EntryFilter.all;
   String entrySearch = '';
-  final ValueNotifier<int> statusTick = ValueNotifier<int>(0);
 
   // ---------------------------------------------------------------------------
   // راه‌اندازی
@@ -412,14 +411,8 @@ class EditorState extends ChangeNotifier {
   void _setStatus(String message, {bool isError = false}) {
     statusMessage = message;
     statusIsError = isError;
-    statusTick.value = statusTick.value + 1;
   }
 
-  @override
-  void dispose() {
-    statusTick.dispose();
-    super.dispose();
-  }
 }
 
 /// دسترسی سراسری به وضعیت بدون پکیج بیرونی

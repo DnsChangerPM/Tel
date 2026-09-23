@@ -1,8 +1,8 @@
 //
 //  Generated file. Do not edit.
 //
-//  برنامهٔ Tel پلاگین ویندوزی ندارد؛ این فایل برای سازگاری با ساختار پروژه‌های
-//  Flutter روی ویندوز نگه داشته شده است.
+//  Tel has no Windows plugins; this file is kept so the project layout matches
+//  the standard Flutter Windows template.
 //
 
 #ifndef GENERATED_PLUGIN_REGISTRANT_

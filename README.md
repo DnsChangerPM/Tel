@@ -14,6 +14,9 @@
 ## ۱) چطور APK و EXE را بسازم؟ (بدون هیچ دانش فنی)
 
 1. در گیت‌هاب به تب **Actions** بروید.
+   > نکته: دکمهٔ **Run workflow** فقط وقتی در تب Actions دیده می‌شود که فایل
+   > ورک‌فلو روی شاخهٔ پیش‌فرض (`main`) وجود داشته باشد. پس اگر تغییرها هنوز در
+   > یک شاخهٔ دیگر (مثل Pull Request) هستند، اول آن‌ها را در `main` merge کنید.
 2. ورک‌فلوی **«Build & Release (APK + EXE)»** را انتخاب کنید.
 3. دکمهٔ **Run workflow** را بزنید.
 4. در کادر **نسخه**، شمارهٔ نسخه را وارد کنید؛ مثلاً `1.2.0` یا `1.2.0+7`.
@@ -82,6 +85,7 @@ Tel-1.2.0-windows-x64.zip         ← بستهٔ کامل پرتابل (exe + dl
   آن‌ها را به `&amp;`، `&lt;` و `&gt;` تبدیل می‌کند.
 
 راهنمای کامل و بلند در `docs/TELEGRAM_XML_GUIDE.md` و داخل خود برنامه (تب «راهنما») هست.
+راهنمای ورک‌فلو و عیب‌یابی ساخت در `docs/GITHUB_ACTIONS.md` است.
 
 ---
 
@@ -118,6 +122,9 @@ flutter pub get
 flutter analyze --no-fatal-infos --no-fatal-warnings
 flutter test
 
+# نسخه را مثل ورک‌فلو داخل pubspec.yaml بنویسید (اختیاری)
+python3 tools/set_version.py 1.2.0+7
+
 # اندروید
 flutter build apk --release --build-name 1.2.0 --build-number 7 \
   --dart-define=TEL_APP_VERSION=1.2.0
@@ -147,7 +154,8 @@ storeFile=/مسیر/کامل/tel-release.jks
 از این پس هر ساخت APK با کلید شما امضا می‌شود (فایل‌های `key.properties` و
 `*.jks` در `.gitignore` هستند و هرگز به گیت‌هاب نمی‌روند). برای استفاده در
 ورک‌فلوی گیت‌هاب، محتوای کیستور را base64 کنید و در GitHub Secrets نگه دارید و
-یک مرحلهٔ decode به ورک‌فلو اضافه کنید.
+مرحلهٔ «آماده‌سازی کلید امضای APK» را ببینید؛ ورک‌فلو از قبل آماده است و
+فقط باید Secretها را بسازید.
 
 ---
 

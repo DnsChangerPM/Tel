@@ -49,7 +49,7 @@ String faDigits(AppLanguage language, Object value) {
   return text.replaceAllMapped(RegExp('[0-9]'), (Match m) => persian[int.parse(m[0]!)]).replaceAll('.', '٫');
 }
 
-String num(BuildContext context, Object value) => faDigits(AppScope.of(context).language, value);
+String faNum(BuildContext context, Object value) => faDigits(AppScope.of(context).language, value);
 
 /// دکمهٔ نوار ابزار
 class ToolButton extends StatelessWidget {
@@ -207,12 +207,12 @@ class StatusBar extends StatelessWidget {
 
     final List<Widget> chips = <Widget>[
       InfoChip(
-        label: '${l10n.entryCount}: ${num(context, state.document.length)}',
+        label: '${l10n.entryCount}: ${faNum(context, state.document.length)}',
         icon: Icons.list_alt,
         color: scheme.primary,
       ),
       InfoChip(
-        label: '${num(context, state.document.changedCount)} ${l10n.edited}',
+        label: '${faNum(context, state.document.changedCount)} ${l10n.edited}',
         icon: state.isDirty ? Icons.edit_note : Icons.check_circle_outline,
         color: state.isDirty ? AppTheme.brandOrange : scheme.tertiary,
       ),

@@ -225,8 +225,9 @@ class FileIoService {
   }) async {
     final StringBuffer header = StringBuffer()
       ..writeln(r'$ErrorActionPreference = "Stop"')
-      ..writeln(r'[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)')
-      ..writeln(r'Add-Type -AssemblyName System.Windows.Forms | Out-Null');
+      ..writeln(r'[Console]::OutputEncoding = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false')
+      ..writeln(r'Add-Type -AssemblyName System.Windows.Forms | Out-Null')
+      ..writeln(r'Add-Type -AssemblyName System.Drawing | Out-Null');
 
     final String dir = initialDirectory ?? windowsDefaultDirectory() ?? '';
     if (dir.isNotEmpty) {
@@ -281,7 +282,7 @@ $owner.TopMost = $true
 $owner.ShowInTaskbar = $false
 $owner.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
 $owner.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-$owner.Size = New-Object System.Drawing.Size(1, 1)
+$owner.Size = New-Object -TypeName System.Drawing.Size -ArgumentList 1, 1
 $owner.Show()
 try {
 ''';

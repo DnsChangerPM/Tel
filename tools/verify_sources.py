@@ -21,10 +21,21 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # API هایی که در Flutter 3.19 (ساخت EXE ویندوز) وجود ندارند
 FORBIDDEN_IN_DART = {
-    "withValues(": "Color.withValues فقط در Flutter 3.27+ وجود دارد (از cardColor یا رنگ ثابت استفاده کنید)",
-    "surfaceContainerHighest": "ColorScheme.surfaceContainerHighest فقط در Flutter 3.22+ وجود دارد",
-    "withOpacity(": "Color.withOpacity در نسخه‌های جدید منسوخ شده است",
-    "surfaceVariant": "ColorScheme.surfaceVariant منسوخ شده است؛ از surface/onSurfaceVariant استفاده کنید",
+    # API های اضافه‌شده پس از Flutter 3.19 (ویندوز) — کد باید با 3.19 هم کامپایل شود
+    "withValues(": "Color.withValues از Flutter 3.27 است؛ از cardColor یا رنگ ثابت استفاده کنید",
+    "surfaceContainerHighest": "ColorScheme.surfaceContainerHighest از Flutter 3.22 است",
+    "withOpacity(": "Color.withOpacity منسوخ شده؛ رنگ را از ColorScheme بردارید",
+    "surfaceVariant": "ColorScheme.surfaceVariant منسوخ شده؛ از onSurfaceVariant استفاده کنید",
+    ".toARGB32(": "Color.toARGB32 از Flutter 3.27 است",
+    "Color.from(": "Color.from از Flutter 3.27 است",
+    "WidgetStateProperty": "WidgetStateProperty از Flutter 3.22 است (MaterialStateProperty هم منسوخ است)",
+    "WidgetState": "WidgetState از Flutter 3.22 است",
+    "CardThemeData": "CardThemeData از Flutter 3.29 است",
+    "TabBarThemeData": "TabBarThemeData از Flutter 3.27 است",
+    "DialogThemeData": "DialogThemeData از Flutter 3.27 است",
+    "CarouselView": "CarouselView از Flutter 3.24 است",
+    "RadioGroup": "RadioGroup از Flutter 3.32 است",
+    "Expansible": "Expansible از Flutter 3.32 است",
 }
 
 errors: list[str] = []
@@ -157,7 +168,11 @@ def check_translations() -> None:
     """همهٔ کلیدهای استفاده‌شده در UI باید در l10n.dart وجود داشته باشند"""
     l10n = (ROOT / "lib/i18n/l10n.dart").read_text(encoding="utf-8")
 
-    getters = set(re.findall(r"^\s{2}[\w<>\s]+\sget (\w+) =>", l10n, re.MULTILINE))
+    pairs = re.findall(r"^\s{2}[\w<>\s]+\sget (\w+) => _t\('([\w]+)'\)", l10n, re.MULTILINE)
+    for getter, key in pairs:
+        if getter != key:
+            errors.append(f"l10n.dart: getter «{getter}» کلید «{key}» را می‌خواند")
+    getters = {getter for getter, _ in pairs}
     # getter های کمکی که کلید ترجمه نیستند
     helper_getters = {"isRtl", "direction"}
     getters -= helper_getters
@@ -267,6 +282,9 @@ def check_required_files() -> None:
         "test/file_io_service_test.dart",
         "test/l10n_test.dart",
         "test/project_structure_test.dart",
+        "test/widget_smoke_test.dart",
+        "docs/TELEGRAM_XML_GUIDE.md",
+        "docs/GITHUB_ACTIONS.md",
         "assets/samples/tg_inline_strings_sample.xml",
         "assets/samples/tg_inline_strings_en_sample.xml",
         "assets/fonts/Vazirmatn-Regular.ttf",
@@ -336,6 +354,101 @@ def check_workflow_contract() -> None:
             errors.append(f"ورک‌فلو مورد «{needle}» را ندارد")
 
 
+def pubspec_data() -> dict:
+    import yaml  # type: ignore
+
+    return yaml.safe_load((ROOT / "pubspec.yaml").read_text(encoding="utf-8")) or {}
+
+
+def check_version_policy() -> None:
+    """قید نسخه‌ها: Dart 3.3+ (Flutter 3.19) تا آخرین نسخه، بدون وابستگی بیرونی"""
+    data = pubspec_data()
+    env = data.get("environment") or {}
+    sdk = str(env.get("sdk", ""))
+    flutter = str(env.get("flutter", ""))
+
+    if "3.3.0" not in sdk:
+        errors.append(f"pubspec.yaml: قید SDK باید Dart 3.3 را بپذیرد ({sdk!r}) تا ساخت ویندوز با Flutter 3.19 کار کند")
+    if "3.19.0" not in flutter:
+        errors.append(f"pubspec.yaml: قید flutter باید از 3.19.0 شروع شود ({flutter!r})")
+
+    allowed = {"flutter", "flutter_test", "flutter_localizations", "cupertino_icons"}
+    for section in ("dependencies", "dev_dependencies"):
+        for name in (data.get(section) or {}):
+            if name not in allowed:
+                errors.append(
+                    f"pubspec.yaml: وابستگی بیرونی «{name}» در {section}؛ پروژه باید بدون pub.dev کار کند"
+                )
+
+    yml = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    match = re.search(r"FLUTTER_VERSION_WINDOWS:\s*'([^']+)'", yml)
+    if not match:
+        errors.append("ورک‌فلو نسخهٔ ویندوز را تعریف نکرده است")
+    else:
+        value = match.group(1)
+        parts = tuple(int(x) for x in value.split(".")[:2])
+        if not (parts >= (3, 19) and parts < (3, 22)):
+            errors.append(
+                f"FLUTTER_VERSION_WINDOWS={value}: برای اجرا روی ویندوز ۸.۱ باید بین 3.19 و 3.21 باشد"
+            )
+
+    android = re.search(r"FLUTTER_VERSION_ANDROID:\s*'([^']+)'", yml)
+    if android:
+        parts = tuple(int(x) for x in android.group(1).split(".")[:2])
+        if parts < (3, 19):
+            errors.append(f"FLUTTER_VERSION_ANDROID={android.group(1)}: برای minSdk 24 و targetSdk 36 خیلی قدیمی است")
+
+    # minSdk باید 24 باشد (اندروید ۷.۰)
+    gradle = (ROOT / "android/app/build.gradle.kts").read_text(encoding="utf-8")
+    if not re.search(r"minSdk\s*=\s*24\b", gradle):
+        errors.append("android/app/build.gradle.kts: minSdk باید 24 باشد (اندروید ۷.۰)")
+
+
+def check_l10n_tables() -> None:
+    """کلیدهای تکراری در جدول ترجمه‌ها (خطای کامپایل در Dart) و خالی‌بودن مقادیر"""
+    l10n = (ROOT / "lib/i18n/l10n.dart").read_text(encoding="utf-8")
+    for lang in ("fa", "en"):
+        block = re.search(rf"'{lang}': <String, String>\{{(.*?)\n    \}},", l10n, re.DOTALL)
+        if not block:
+            continue
+        keys = re.findall(r"^\s*'(\w+)':", block.group(1), re.MULTILINE)
+        duplicates = sorted({key for key in keys if keys.count(key) > 1})
+        if duplicates:
+            errors.append(f"l10n.dart کلیدهای تکراری در زبان {lang}: {duplicates}")
+
+
+def _paren_end(text: str, start: int) -> int:
+    """اندیس بسته‌شدن اولین پرانتز باز از [start]"""
+    depth = 0
+    for i in range(start, len(text)):
+        if text[i] == "(":
+            depth += 1
+        elif text[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return i
+    return len(text)
+
+
+def check_horizontal_scroll_flex() -> None:
+    """Spacer/Expanded داخل SingleChildScrollView افقی در زمان اجرا خطا می‌دهد"""
+    marker = "SingleChildScrollView("
+    for path in dart_files():
+        text = path.read_text(encoding="utf-8")
+        index = 0
+        while True:
+            index = text.find(marker, index)
+            if index == -1:
+                break
+            end = _paren_end(text, index + len(marker) - 1)
+            body = text[index:end]
+            if "Axis.horizontal" in body and ("Spacer(" in body or "Expanded(" in body):
+                warnings.append(
+                    f"{rel(path)}: داخل SingleChildScrollView افقی از Spacer/Expanded استفاده شده است"
+                )
+            index = end
+
+
 def main() -> int:
     dart = dart_files()
     for path in dart:
@@ -347,6 +460,9 @@ def main() -> int:
     check_required_files()
     check_no_mustache()
     check_workflow_contract()
+    check_version_policy()
+    check_l10n_tables()
+    check_horizontal_scroll_flex()
 
     print(f"بررسی {len(dart)} فایل Dart ... تمام شد")
     if warnings:
